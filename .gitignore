@@ -25,3 +25,6 @@ Manifest.toml
 
 # Interactive testing
 scrap/
+
+# macOS-specific file
+.DS_Store
