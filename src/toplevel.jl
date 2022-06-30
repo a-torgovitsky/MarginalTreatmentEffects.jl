@@ -46,3 +46,18 @@ function menu(savelocation::String = "."; compile::Bool = false)
     figure_choice = parse(Int64, figure_choice)
 end
 export menu
+
+function compile_latex(fn::String)
+    oldwd = pwd()
+    try
+        cd(dirname(fn))
+        cstr = `pdflatex -halt-on-error $(basename(fn)) "|" grep -a3 ^!`
+        @suppress begin
+            run(cstr)
+            run(`latexmk -c`)
+        end
+        cd(oldwd)
+    catch err
+        cd(oldwd)
+    end
+end
