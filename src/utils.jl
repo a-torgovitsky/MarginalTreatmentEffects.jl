@@ -62,3 +62,36 @@ function setup(savelocation::String;
     resultsdir, already_existed = make_dir(pathstr)
     return resultsdir, already_existed
 end
+
+# Create coordinates for \addplot
+# If steps is not specified, return a string of coordinates to draw curves
+# If steps is specified, return a vector of coordinates (i.e., endpoints)
+# steps controls how far apart the points are.
+# This is particularly useful when drawing tick marks.
+function df_to_coordinates(df, xindex, yindex; steps = nothing)
+    x = round.(df[:, xindex], digits = 3)
+    y = round.(df[:, yindex], digits = 3)
+    if isnothing(steps)
+        coordinates = ""
+        for i in 1:nrow(df)
+            coordinates = coordinates *
+                "(" * string(x[i]) * "," * string(y[i]) * ")"
+        end
+    else
+        coordinates = Vector{String}() # initialize empty vector of strings
+        for segment_idx in 1:(nrow(df) - 1)
+            endpoints = ""
+            lb = x[segment_idx]
+            ub = x[segment_idx + 1]
+            yval = y[segment_idx]
+            grid = round.(range(lb, ub, step = steps), digits = 3)
+            for point_idx in 1:length(grid)
+                endpoints = endpoints * "(" *
+                    string(grid[point_idx]) * "," *
+                    string(yval) * ")"
+            end
+            push!(coordinates, endpoints)
+        end
+    end
+    return coordinates
+end

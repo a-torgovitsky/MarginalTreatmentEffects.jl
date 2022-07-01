@@ -27,7 +27,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
         println("\t 8. Bounds on Family of PRTEs (Figure 8)")
     elseif project_choice == 2
         dirname = "mt2018review"
-        println("\t 1. DGP MTRs (Figure 1)")
+        println("\t 1. DGP MTRs and MTE (Figure 1)")
         println("\t 2. Weights for Conventional Target Parameters (Figure 2)")
         println("\t 3. Extrapolated LATEs (Figure 3)")
         println("\t 4. ATT Bounds w/ 4th degree MTRs (Figure 4)")
@@ -44,9 +44,27 @@ function menu(savelocation::String = "."; compile::Bool = false)
     print("Enter figure choice: ")
     figure_choice = readline()
     figure_choice = parse(Int64, figure_choice)
+
+    if project_choice == 1
+        if figure_choice == 1
+            savedir, _ = setup(savelocation, stub = "dgp")
+            run_mtrs_and_weights(savedir, compile)
+        else
+            @error "WIP" project_choice figure_choice
+        end
+    elseif project_choice == 2
+    end
 end
 export menu
 
+function run_mtrs_and_weights(savedir::String, compile::Bool = false)
+    texfn = mtrs_and_weights(savedir)
+    if compile
+        compile_latex(texfn)
+    end
+end
+
+# Q: move to src/utils.jl?
 function compile_latex(fn::String)
     oldwd = pwd()
     try
@@ -54,6 +72,9 @@ function compile_latex(fn::String)
         cstr = `pdflatex -halt-on-error $(basename(fn)) "|" grep -a3 ^!`
         @suppress begin
             run(cstr)
+            run(cstr) # Q: need to run twice to get references correct
+            # Q: why not use latexmk to compile pdf?
+            # i.e. run(`latexmk -pdf $(basename(fn))`)
             run(`latexmk -c`)
         end
         cd(oldwd)
