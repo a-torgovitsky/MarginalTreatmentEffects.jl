@@ -34,12 +34,11 @@ function defaults_econometrica()
         :ylabelbuffer => "1.20",
         :ylabeltextwidth => "1in",
         :ylabelweights => nothing
-        # :weight0fn => "weights-m0.csv",
-        # :weight1fn => "weights-m1.csv"
     )
 end
 
-function mtrs_and_weights(savedir::String)
+# This function returns the tex file for producing Figure 1.
+function dgp_to_tex(savedir::String)
     dgp = dgp_econometrica()
     tp = late(dgp, 0.35, 0.9)
     ivlike = ivslope(dgp)
@@ -48,33 +47,32 @@ function mtrs_and_weights(savedir::String)
     d1weights = Vector{Dict}()
     legend = Vector{Dict}()
 
+    # Collect MTR data
     ev = DataFrame(z = 1, u = 0:0.1:1)
     mtr0 = evaluate_mtr(dgp.mtrs[1], ev)
     mtr1 = evaluate_mtr(dgp.mtrs[2], ev)
     mtr_results = DataFrame(u = 0:0.1:1)
     mtr_results[:, "mtr0"] = mtr0
     mtr_results[:, "mtr1"] = mtr1
+
+    # Store data in dictionary for Mustache.jl
     settings[:m0coordinates] = df_to_coordinates(mtr_results, :u, :mtr0)
     settings[:m1coordinates] = df_to_coordinates(mtr_results, :u, :mtr1)
     settings[:title] = "~"
     settings[:mtrlegendtext] = "DGP MTRs"
     settings[:ylabelweights] = "Weights (where \$\\neq 0\$)"
 
+    # Collect LATE(0.35, 0.90) data
     tp_weights = compute_average_weights(tp)
-    ivlike_weights = compute_average_weights(ivlike, dgp)
     tp_d0_coord = df_to_coordinates(tp_weights, :u, 3, steps = 1/500)
     tp_d1_coord = df_to_coordinates(tp_weights, :u, 2, steps = 1/500)
+
+    # Collect IV Slope data
+    ivlike_weights = compute_average_weights(ivlike, dgp)
     ivlike_d0_coord = df_to_coordinates(ivlike_weights, :u, 3, steps = 1/500)
     ivlike_d1_coord = df_to_coordinates(ivlike_weights, :u, 2, steps = 1/500)
 
-    settings[:weightymax] = ceil(max(
-        tp_weights[:, 2]...,
-        tp_weights[:, 3]...,
-        ivlike_weights[:, 2]...,
-        ivlike_weights[:, 3]...
-    )) + 1
-    settings[:weightymin] = -1 * settings[:weightymax]
-
+    # Store data in dictionary for Mustache.jl for d = 0 weights
     d0weights = Vector{Dict}()
     for coordinate_idx in 1:length(tp_d0_coord)
         segment = Dict(
@@ -109,6 +107,7 @@ function mtrs_and_weights(savedir::String)
         "legendtitle" => "IV Slope"
     ))
 
+    # Store data in dictionary for Mustache.jl for d = 1 weights
     d1weights = Vector{Dict}()
     for coordinate_idx in 1:length(tp_d1_coord)
         segment = Dict(
@@ -131,6 +130,16 @@ function mtrs_and_weights(savedir::String)
         push!(d1weights, segment)
     end
 
+    # Update aesthetic information based on weights
+    settings[:weightymax] = ceil(max(
+        tp_weights[:, 2]...,
+        tp_weights[:, 3]...,
+        ivlike_weights[:, 2]...,
+        ivlike_weights[:, 3]...
+    )) + 1
+    settings[:weightymin] = -1 * settings[:weightymax]
+
+    # Create tex file
     templatefn = joinpath(savedir, "mst2018econometrica", "tikz-template.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
@@ -146,4 +155,4 @@ function mtrs_and_weights(savedir::String)
     end
     return texfn
 end
-export mtrs_and_weights
+export dgp_to_tex

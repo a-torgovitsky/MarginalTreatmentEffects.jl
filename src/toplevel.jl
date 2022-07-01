@@ -48,7 +48,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
     if project_choice == 1
         if figure_choice == 1
             savedir, _ = setup(savelocation, stub = "dgp")
-            run_mtrs_and_weights(savedir, compile)
+            run_dgp(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
@@ -57,8 +57,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
 end
 export menu
 
-function run_mtrs_and_weights(savedir::String, compile::Bool = false)
-    texfn = mtrs_and_weights(savedir)
+# Figure 1: plot DGP MTRs and weights for LATE(0.35, 0.90) and IV Slope
+function run_dgp(savedir::String, compile::Bool = false)
+    texfn = dgp_to_tex(savedir)
     if compile
         compile_latex(texfn)
     end
