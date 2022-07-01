@@ -47,19 +47,29 @@ function menu(savelocation::String = "."; compile::Bool = false)
 
     if project_choice == 1
         if figure_choice == 1
-            savedir, _ = setup(savelocation, stub = "dgp")
-            run_dgp(savedir, compile)
+            savedir, _ = setup(savelocation, stub = "np-ivs-no-title")
+            run_np_ivs_notitle(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
     elseif project_choice == 2
+        @error "WIP" project_choice figure_choice
     end
 end
 export menu
 
 # Figure 1: plot DGP MTRs and weights for LATE(0.35, 0.90) and IV Slope
-function run_dgp(savedir::String, compile::Bool = false)
-    texfn = dgp_to_tex(savedir)
+function run_np_ivs_notitle(savedir::String, compile::Bool = false)
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => false,
+        :ivslope => true
+    );
+    texfn = mtrs_and_weights(savedir, "np-ivs-no-title";
+        assumptions = assumptions,
+        mtroption = "truth"
+    )
     if compile
         compile_latex(texfn)
     end

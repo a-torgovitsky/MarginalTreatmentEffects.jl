@@ -85,6 +85,7 @@ function df_to_coordinates(df, xindex, yindex; steps = nothing)
             ub = x[segment_idx + 1]
             yval = y[segment_idx]
             grid = round.(range(lb, ub, step = steps), digits = 3)
+            unique!(push!(grid, ub)) # ensure that ub is in grid
             for point_idx in 1:length(grid)
                 endpoints = endpoints * "(" *
                     string(grid[point_idx]) * "," *
@@ -94,4 +95,38 @@ function df_to_coordinates(df, xindex, yindex; steps = nothing)
         end
     end
     return coordinates
+end
+
+# Generate the title used in the legend
+# Q: should this be a property of the TargetParameter struct?
+# If we can't specify default values of these properties, then it might break
+# existing code.
+function legendtitle(tp::TargetParameter)
+    if tp.name == "LATE(u₁, u₂)"
+        lb = tp.int_limits(1)[1]
+        ub = tp.int_limits(1)[2]
+        title = "LATE(\$ $(@sprintf("%.2f", lb)), $(@sprintf("%.2f", ub)) \$)"
+    else
+        @error "WIP" tp.name
+    end
+    return title
+end
+function legendtitle(ivlike::IVLike)
+    return ivlike.name
+end
+
+# Generate the title used in path for cross-referencing
+function pathtitle(tp::TargetParameter)
+    if tp.name == "LATE(u₁, u₂)"
+        title = "late"
+    else
+        @error "WIP" tp.name
+    end
+    return title
+end
+function pathtitle(ivlike::IVLike)
+    if ivlike.name == "IV Slope"
+        title = "ivs"
+    end
+    return title
 end

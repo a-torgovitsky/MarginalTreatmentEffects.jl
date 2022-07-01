@@ -11,7 +11,7 @@ function dgp_econometrica()
 end
 
 function defaults_econometrica()
-    Dict(
+    settings = Dict(
         :axisheight => "2in",
         :axiswidth => "3in",
         :fontsize => "\\large",
@@ -35,109 +35,183 @@ function defaults_econometrica()
         :ylabeltextwidth => "1in",
         :ylabelweights => nothing
     )
+
+    colors = ["gray", "darkgray", "lightgray", "darkgray", "lightgray",
+              "darkgray", "lightgray"]
+    marks = ["*", "x", "diamond*", "square*", "|", "triangle*", "pentagon*"]
+    marksize = ["1pt", "2.5pt", "1.5pt", "1.25pt", "3pt", "1.25pt", "1.25pt"]
+
+    return settings, colors, marks, marksize
 end
 
-# This function returns the tex file for producing Figure 1.
-function dgp_to_tex(savedir::String)
-    dgp = dgp_econometrica()
-    tp = late(dgp, 0.35, 0.9)
-    ivlike = ivslope(dgp)
-    settings = defaults_econometrica()
-    d0weights = Vector{Dict}()
-    d1weights = Vector{Dict}()
-    legend = Vector{Dict}()
+"""
+    mtrs_and_weights(
+        savedir::String,
+        filename::String;
+        dgp::DGP = dgp_econometrica(),
+        tp::TargetParameter = late(dgp, 0.35, 0.9),
+        assumptions::Dict,
+        mtroption::String,
+        defaults = defaults_econometrica()
+    )
 
-    # Collect MTR data
+This function produces the tex file used to create the figures in MST (2018).
+The file path of this tex file will be returned.
+
+# Parameters
+
+- savedir: directory where the tex file will be stored
+- filename: name of the tex file
+- dgp: data generating process
+- tp: target parameter
+- assumptions: dictionary of assumptions, including IV-like estimand
+- mtroption: either "truth", "max" or "min"
+- defaults: tuple of four elements:
+    1. settings::Dict
+    2. colors::Vector{String}
+    3. marks::Vector{String}
+    4. marksize::Vector{String}
+"""
+function mtrs_and_weights(
+    savedir::String,
+    filename::String;
+    dgp::DGP = dgp_econometrica(),
+    tp::TargetParameter = late(dgp, 0.35, 0.9),
+    assumptions::Dict,
+    mtroption::String,
+    defaults = defaults_econometrica()
+)
+    # TODO: separate mtr data from aesthetic information in settings
+
+    # initialize
+    settings, colors, marks, marksize = defaults # aesthetic information
+    d0weights = Vector{Dict}() # keeps track of weight segments for d = 0
+    d1weights = Vector{Dict}() # keeps track of weight segments for d = 1
+    legend = Vector{Dict}() # keeps track of legend entries
+    aesthetic_counter = 1 # keeps track of colors, marks, and marksize
+
+    # Collect data for MTRs
     ev = DataFrame(z = 1, u = 0:0.1:1)
-    mtr0 = evaluate_mtr(dgp.mtrs[1], ev)
-    mtr1 = evaluate_mtr(dgp.mtrs[2], ev)
+    if mtroption == "truth"
+        mtr0 = evaluate_mtr(dgp.mtrs[1], ev)
+        mtr1 = evaluate_mtr(dgp.mtrs[2], ev)
+        settings[:title] = "~"
+    else
+        @error "unsupported" mtroption
+    end
     mtr_results = DataFrame(u = 0:0.1:1)
     mtr_results[:, "mtr0"] = mtr0
     mtr_results[:, "mtr1"] = mtr1
 
-    # Store data in dictionary for Mustache.jl
+    println("...store MTR data in dictionary") # DEBUG:
+
+    # Store MTR data in dictionary for Mustache.jl
     settings[:m0coordinates] = df_to_coordinates(mtr_results, :u, :mtr0)
     settings[:m1coordinates] = df_to_coordinates(mtr_results, :u, :mtr1)
-    settings[:title] = "~"
     settings[:mtrlegendtext] = "DGP MTRs"
     settings[:ylabelweights] = "Weights (where \$\\neq 0\$)"
 
-    # Collect LATE(0.35, 0.90) data
+
+    # Collect data for target parameter
     tp_weights = compute_average_weights(tp)
     tp_d0_coord = df_to_coordinates(tp_weights, :u, 3, steps = 1/500)
     tp_d1_coord = df_to_coordinates(tp_weights, :u, 2, steps = 1/500)
-
-    # Collect IV Slope data
-    ivlike_weights = compute_average_weights(ivlike, dgp)
-    ivlike_d0_coord = df_to_coordinates(ivlike_weights, :u, 3, steps = 1/500)
-    ivlike_d1_coord = df_to_coordinates(ivlike_weights, :u, 2, steps = 1/500)
-
-    # Store data in dictionary for Mustache.jl for d = 0 weights
-    d0weights = Vector{Dict}()
+    println("...collect data for tp") # DEBUG:
+    push!(legend, Dict(
+        "color" => colors[aesthetic_counter],
+        "mark" => marks[aesthetic_counter],
+        "marksize" => marksize[aesthetic_counter],
+        "legendtitle" => legendtitle(tp)
+    ))
+    println("...finished") # DEBUG:
     for coordinate_idx in 1:length(tp_d0_coord)
         segment = Dict(
-            "pathname" => "d0late" * string(coordinate_idx),
-            "color" => "gray",
-            "mark" => "*",
-            "marksize" => "1pt",
+            "pathname" => "d0" * pathtitle(tp) * string(coordinate_idx),
+            "color" => colors[aesthetic_counter],
+            "mark" => marks[aesthetic_counter],
+            "marksize" => marksize[aesthetic_counter],
             "coordinates" => tp_d0_coord[coordinate_idx]
         )
         push!(d0weights, segment)
     end
-    push!(legend, Dict(
-        "color" => "gray",
-        "mark" => "*",
-        "marksize" => "1pt",
-        "legendtitle" => "LATE(\$0.35, 0.90\$)"
-    ))
-    for coordinate_idx in 1:length(ivlike_d0_coord)
-        segment = Dict(
-            "pathname" => "d0ivslope" * string(coordinate_idx),
-            "color" => "darkgray",
-            "mark" => "x",
-            "marksize" => "2.5pt",
-            "coordinates" => ivlike_d0_coord[coordinate_idx]
-        )
-        push!(d0weights, segment)
-    end
-    push!(legend, Dict(
-        "color" => "darkgray",
-        "mark" => "x",
-        "marksize" => "2.5pt",
-        "legendtitle" => "IV Slope"
-    ))
-
-    # Store data in dictionary for Mustache.jl for d = 1 weights
-    d1weights = Vector{Dict}()
     for coordinate_idx in 1:length(tp_d1_coord)
         segment = Dict(
-            "pathname" => "d1late" * string(coordinate_idx),
-            "color" => "gray",
-            "mark" => "*",
-            "marksize" => "1pt",
+            "pathname" => "d1" * pathtitle(tp) * string(coordinate_idx),
+            "color" => colors[aesthetic_counter],
+            "mark" => marks[aesthetic_counter],
+            "marksize" => marksize[aesthetic_counter],
             "coordinates" => tp_d1_coord[coordinate_idx]
         )
         push!(d1weights, segment)
     end
-    for coordinate_idx in 1:length(ivlike_d1_coord)
-        segment = Dict(
-            "pathname" => "d1ivslope" * string(coordinate_idx),
-            "color" => "darkgray",
-            "mark" => "x",
-            "marksize" => "2.5pt",
-            "coordinates" => ivlike_d1_coord[coordinate_idx]
-        )
-        push!(d1weights, segment)
+    aesthetic_counter += 1
+
+    println("...collect data for ivlike") # DEBUG:
+
+    # Collect data for IV-like estimands
+    ivlike_weights = Vector() # used to compute max and min weights
+    if haskey(assumptions, :ivslope)
+        println("...collect data for ivslope") # DEBUG:
+        ivlike_d0_coord = Vector()
+        ivlike_d1_coord = Vector()
+        s = ivslope(dgp)
+        s_weights = compute_average_weights(s, dgp)
+        push!(ivlike_weights, s_weights[:, 2]...)
+        push!(ivlike_weights, s_weights[:, 3]...)
+        d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
+        push!(ivlike_d0_coord, d0_coordinates...)
+        d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
+        push!(ivlike_d1_coord, d1_coordinates...)
+        push!(legend, Dict(
+            "color" => colors[aesthetic_counter],
+            "mark" => marks[aesthetic_counter],
+            "marksize" => marksize[aesthetic_counter],
+            "legendtitle" => legendtitle(s)
+        ))
+
+        println("...collect data for ivslope, d = 0") # DEBUG:
+
+        # Store data in dictionary for Mustache.jl for d = 0 weights
+        for coordinate_idx in 1:length(ivlike_d0_coord)
+            segment = Dict(
+                "pathname" => "d0ivslope" * string(coordinate_idx),
+                "color" => "darkgray",
+                "mark" => "x",
+                "marksize" => "2.5pt",
+                "coordinates" => ivlike_d0_coord[coordinate_idx]
+            )
+            push!(d0weights, segment)
+        end
+
+        println("...collect data for ivslope, d = 1") # DEBUG:
+
+        # Store data in dictionary for Mustache.jl for d = 1 weights
+        for coordinate_idx in 1:length(ivlike_d1_coord)
+            segment = Dict(
+                "pathname" => "d1ivslope" * string(coordinate_idx),
+                "color" => "darkgray",
+                "mark" => "x",
+                "marksize" => "2.5pt",
+                "coordinates" => ivlike_d1_coord[coordinate_idx]
+            )
+            push!(d1weights, segment)
+        end
+        aesthetic_counter += 1
     end
+
+
+    println("...update aesthetic info") # DEBUG:
 
     # Update aesthetic information based on weights
     settings[:weightymax] = ceil(max(
         tp_weights[:, 2]...,
         tp_weights[:, 3]...,
-        ivlike_weights[:, 2]...,
-        ivlike_weights[:, 3]...
+        ivlike_weights...
     )) + 1
+    println("...done updating aesthic info") # DEBUG
     settings[:weightymin] = -1 * settings[:weightymax]
+
+    println("...create tex file") # DEBUG:
 
     # Create tex file
     templatefn = joinpath(savedir, "mst2018econometrica", "tikz-template.tex")
@@ -149,10 +223,10 @@ function dgp_to_tex(savedir::String)
         d1weights = d1weights,
         legend = legend
     )
-    texfn = joinpath(dirname(templatefn), "dgp.tex")
+    texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
         write(file, tex)
     end
     return texfn
 end
-export dgp_to_tex
+export mtrs_and_weights
