@@ -130,3 +130,10 @@ function pathtitle(ivlike::IVLike)
     end
     return title
 end
+
+# Write bounds as an interval
+function parse_bounds(result)
+    lb = result[:lb]
+    ub = result[:ub]
+    return ": [\$ $(@sprintf("%.3f", lb)), $(@sprintf("%.3f", ub)) \$]"
+end

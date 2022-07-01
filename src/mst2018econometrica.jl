@@ -64,9 +64,10 @@ The file path of this tex file will be returned.
 - filename: name of the tex file
 - dgp: data generating process
 - tp: target parameter
+- basis: vector of tuples, where each tuple is a pair of MTRBasis structs
 - assumptions: dictionary of assumptions, including IV-like estimand
-- mtroption: either "truth", "max" or "min"
-- defaults: tuple of four elements:
+- mtroption: either "truth", "max", or "min"
+- opts: tuple of four elements:
     1. settings::Dict
     2. colors::Vector{String}
     3. marks::Vector{String}
@@ -75,40 +76,55 @@ The file path of this tex file will be returned.
 function mtrs_and_weights(
     savedir::String,
     filename::String;
-    dgp::DGP = dgp_econometrica(),
-    tp::TargetParameter = late(dgp, 0.35, 0.9),
+    dgp::DGP,
+    tp::TargetParameter,
+    basis::Vector{Tuple{MTRBasis, MTRBasis}},
     assumptions::Dict,
     mtroption::String,
-    defaults = defaults_econometrica()
+    opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}}
 )
     # TODO: separate mtr data from aesthetic information in settings
 
     # initialize
-    settings, colors, marks, marksize = defaults # aesthetic information
+    settings, colors, marks, marksize = opts # aesthetic information
     d0weights = Vector{Dict}() # keeps track of weight segments for d = 0
     d1weights = Vector{Dict}() # keeps track of weight segments for d = 1
     legend = Vector{Dict}() # keeps track of legend entries
     aesthetic_counter = 1 # keeps track of colors, marks, and marksize
 
+    # compute bounds
+    result = compute_bounds(tp, basis, assumptions, dgp)
+
     # Collect data for MTRs
     ev = DataFrame(z = 1, u = 0:0.1:1)
     if mtroption == "truth"
-        mtr0 = evaluate_mtr(dgp.mtrs[1], ev)
-        mtr1 = evaluate_mtr(dgp.mtrs[2], ev)
-        settings[:title] = "~"
+        mtr0 = dgp.mtrs[1]
+        mtr1 = dgp.mtrs[2]
+        settings[:mtrlegendtext] = "DGP MTRs"
+    elseif mtroption == "max"
+        mtr0 = result[:mtr_ub][1][1]
+        mtr1 = result[:mtr_ub][1][2]
+        settings[:title] = settings[:title] * parse_bounds(result)
+        settings[:mtrlegendtext] = "Maximizing MTRs"
+    elseif mtroption == "min"
+        mtr0 = result[:mtr_lb][1][1]
+        mtr1 = result[:mtr_lb][1][2]
+        settings[:title] = settings[:title] * parse_bounds(result)
+        settings[:mtrlegendtext] = "Minimizing MTRs"
     else
         @error "unsupported" mtroption
     end
+    ev = DataFrame(z = 1, u = 0:0.1:1)
     mtr_results = DataFrame(u = 0:0.1:1)
-    mtr_results[:, "mtr0"] = mtr0
-    mtr_results[:, "mtr1"] = mtr1
+    # TODO: are :lb and :ub not being enforced?
+    mtr_results[:, "mtr0"] = evaluate_mtr(mtr0, ev)
+    mtr_results[:, "mtr1"] = evaluate_mtr(mtr1, ev)
 
     println("...store MTR data in dictionary") # DEBUG:
 
     # Store MTR data in dictionary for Mustache.jl
     settings[:m0coordinates] = df_to_coordinates(mtr_results, :u, :mtr0)
     settings[:m1coordinates] = df_to_coordinates(mtr_results, :u, :mtr1)
-    settings[:mtrlegendtext] = "DGP MTRs"
     settings[:ylabelweights] = "Weights (where \$\\neq 0\$)"
 
 
