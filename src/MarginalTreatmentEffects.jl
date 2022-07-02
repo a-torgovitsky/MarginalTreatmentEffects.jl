@@ -7,6 +7,7 @@ module MarginalTreatmentEffects
     using Mustache
     using Printf
 
+    include("weights.jl")
     include("utils.jl")
     include("mst2018econometrica.jl")
     include("toplevel.jl")
