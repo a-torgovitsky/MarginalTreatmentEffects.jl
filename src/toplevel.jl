@@ -61,6 +61,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 5
             savedir, _ = setup(savelocation, stub = "np-sharp")
             run_np_sharp(savedir, compile)
+        elseif figure_choice == 6
+            savedir, _ = setup(savelocation, stub = "np-sharp-decr")
+            run_np_sharp_decr(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
@@ -193,6 +196,33 @@ function run_np_sharp(savedir::String, compile::Bool = false)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
     texfn = mtrs_and_weights(savedir, "np-sharp";
+        dgp = dgp,
+        tp = late(dgp, 0.35, 0.9),
+        basis = basis,
+        assumptions = assumptions,
+        mtroption = "max",
+        opts = opts
+    )
+    if compile
+        compile_latex(texfn)
+    end
+end
+
+# Figure 6: maximizing, decreasing MTRs for sharp LATE(0.35, 0.90) bounds
+function run_np_sharp_decr(savedir::String, compile::Bool = false)
+    dgp = dgp_econometrica()
+    knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
+    basis = [(constantspline_basis(knots),
+              constantspline_basis(knots))]
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => true,
+        :decreasing_level => [(1, 0), (1, 1)]
+    )
+    opts = defaults_econometrica()
+    opts[1][:title] = "Nonparametric bounds, MTRs decreasing"
+    texfn = mtrs_and_weights(savedir, "np-sharp-decr";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
         basis = basis,
