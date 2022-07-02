@@ -37,14 +37,13 @@ function compute_average_weights(ivlike::IVLike, dgp::DGP)
     results = DataFrame(u = unique(vcat(0, dgp.pscore)))
     order = sortperm(dgp.pscore)
     s = ivlike.s[1] # only 1 s-list at a time!
-    if ivlike.name == "Saturated"
+    if occursin("Saturated", ivlike.name)
         # `eachrow()` in the `make_slist()` function yields vectors
         # TODO: resolve this inconsistency
-        terms = d -> [s(d, [dgp.suppZ[i]]) for i in 1:length(order)]
+        terms = d -> s.(d, eachrow(dgp.suppZ)) .* dgp.densZ
     else
-        terms = d -> [s(d, dgp.suppZ[i]) for i in 1:length(order)]
+        terms = d -> s.(d, dgp.suppZ) .* dgp.densZ
     end
-    terms = terms .* dgp.densZ
     # d = 1
     d1terms = terms(1)
     summands = d1terms[reverse(order)] # order by decreasing pscore
