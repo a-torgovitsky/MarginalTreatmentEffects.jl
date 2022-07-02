@@ -64,6 +64,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 6
             savedir, _ = setup(savelocation, stub = "np-sharp-decr")
             run_np_sharp_decr(savedir, compile)
+        elseif figure_choice == 7
+            savedir, _ = setup(savelocation, stub = "np-sharp-decr-k10")
+            run_np_sharp_decr_k10(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
@@ -223,6 +226,32 @@ function run_np_sharp_decr(savedir::String, compile::Bool = false)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds, MTRs decreasing"
     texfn = mtrs_and_weights(savedir, "np-sharp-decr";
+        dgp = dgp,
+        tp = late(dgp, 0.35, 0.9),
+        basis = basis,
+        assumptions = assumptions,
+        mtroption = "max",
+        opts = opts
+    )
+    if compile
+        compile_latex(texfn)
+    end
+end
+
+# Figure 7: maximizing, decreasing 9th order MTRs for sharp LATE(0.35, 0.90) bounds
+function run_np_sharp_decr_k10(savedir::String, compile::Bool = false)
+    dgp = dgp_econometrica()
+    basis = [(bernstein_basis(9),
+              bernstein_basis(9))];
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => true,
+        :decreasing_level => [(1, 0), (1, 1)]
+    )
+    opts = defaults_econometrica()
+    opts[1][:title] = "Order 9 polynomial bounds, MTRs decreasing"
+    texfn = mtrs_and_weights(savedir, "np-sharp-decr-k10";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
         basis = basis,
