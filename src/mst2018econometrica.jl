@@ -96,7 +96,6 @@ function mtrs_and_weights(
     result = compute_bounds(tp, basis, assumptions, dgp)
 
     # Collect data for MTRs
-    ev = DataFrame(z = 1, u = 0:0.1:1)
     if mtroption == "truth"
         mtr0 = dgp.mtrs[1]
         mtr1 = dgp.mtrs[2]
@@ -114,9 +113,10 @@ function mtrs_and_weights(
     else
         @error "unsupported" mtroption
     end
-    ev = DataFrame(z = 1, u = 0:0.1:1)
-    mtr_results = DataFrame(u = 0:0.1:1)
-    # TODO: are :lb and :ub not being enforced?
+    step = 500
+    ugrid = (1/step):(1/step):(1 - 1/step)
+    ev = DataFrame(z = 1, u = ugrid)
+    mtr_results = DataFrame(u = (1/step):(1/step):(1 - 1/step))
     mtr_results[:, "mtr0"] = evaluate_mtr(mtr0, ev)
     mtr_results[:, "mtr1"] = evaluate_mtr(mtr1, ev)
 
@@ -278,9 +278,9 @@ function mtrs_and_weights(
             s_weights = compute_average_weights(s, dgp)
             push!(ivlike_weights, s_weights[:, 2]...)
             push!(ivlike_weights, s_weights[:, 3]...)
-            d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
+            d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/step)
             push!(ivlike_d0_coord, d0_coordinates...)
-            d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
+            d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/step)
             push!(ivlike_d1_coord, d1_coordinates...)
             push!(legend, Dict(
                 "color" => colors[aesthetic_counter],
