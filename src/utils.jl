@@ -129,6 +129,18 @@ function legendtitle(ivlike::IVLike)
             push!(title, "\$\\mathbb{1}[Z = $z]\$")
         end
     end
+    if ivlike.name == "Saturated"
+        title = Vector{String}()
+        # BUG: the original Figure 5 in MST (2018) doesn't use the support of Z.
+        # Instead, they use the indices of Z.
+        # It is easier for me to use the indices of Z. If I want to correct
+        # this mistake, I somehow need to pass information about the support to
+        # this function.
+        d_string = ["\$(1 - D)\$", "\$D\$"]
+        z_string = "\$\\mathbb{1}[Z = " .* string.(1:(Int(length(ivlike.s) / 2))) .* "]\$"
+        # NOTE: without [:], `title` would be a matrix
+        title = [d * z for z in z_string, d in d_string][:]
+    end
     return title
 end
 
@@ -148,6 +160,8 @@ function pathtitle(ivlike::IVLike)
         title = "olss"
     elseif occursin("IV Slope for 𝟙(Z == z) for z ∈", ivlike.name)
         title = "ivnps" .* string.(ivlike.params[:support])
+    elseif ivlike.name == "Saturated"
+        title = "saturated" .* string(collect(1:length(ivlike.s)))
     end
     return title
 end

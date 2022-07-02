@@ -165,7 +165,7 @@ function mtrs_and_weights(
 
     # Collect data for IV-like estimands
     ivlike_weights = Vector() # used to compute max and min weights
-    if haskey(assumptions, :ivslope)
+    if haskey(assumptions, :ivslope) && assumptions[:ivslope]
         println("...collect data for ivslope") # DEBUG:
         ivlike_d0_coord = Vector()
         ivlike_d1_coord = Vector()
@@ -214,7 +214,7 @@ function mtrs_and_weights(
         aesthetic_counter += 1
     end
 
-    if haskey(assumptions, :olsslope)
+    if haskey(assumptions, :olsslope) && assumptions[:olsslope]
         println("...collect data for olsslope") # DEBUG:
         ivlike_d0_coord = Vector()
         ivlike_d1_coord = Vector()
@@ -321,6 +321,65 @@ function mtrs_and_weights(
         end
     end
 
+    if haskey(assumptions, :saturated) && assumptions[:saturated]
+        s_ivlike = make_slist(dgp.suppZ)
+        legend_order = [1, 3, 5, 2, 4, 6] # ensures correct legend aesthetics
+        for saturated_idx in 1:length(s_ivlike.s)
+            println("...collect data for sharp: ", saturated_idx) # DEBUG:
+            ivlike_d0_coord = Vector()
+            ivlike_d1_coord = Vector()
+            s = IVLike(
+                "Saturated; index $saturated_idx",
+                [s_ivlike.s[legend_order[saturated_idx]]],
+                nothing
+            )
+            println("...compute average weights") # DEBUG:
+            s_weights = compute_average_weights(s, dgp) # BOOKMARK: why are all the weights equal to 0?
+            println("...finish computing average weights") # DEBUG:
+            push!(ivlike_weights, s_weights[:, 2]...)
+            push!(ivlike_weights, s_weights[:, 3]...)
+            d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
+            push!(ivlike_d0_coord, d0_coordinates...)
+            d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
+            push!(ivlike_d1_coord, d1_coordinates...)
+            push!(legend, Dict(
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
+                "legendtitle" => legendtitle(s_ivlike)[saturated_idx]
+            ))
+            println(colors[aesthetic_counter]) # DEBUG:
+
+            println("...collect data for saturated, d = 0") # DEBUG:
+
+            # Store data in dictionary for Mustache.jl for d = 0 weights
+            for coordinate_idx in 1:length(ivlike_d0_coord)
+                segment = Dict(
+                    "pathname" => "d0" * pathtitle(s_ivlike)[saturated_idx] * string(coordinate_idx),
+                    "color" => colors[aesthetic_counter],
+                    "mark" => marks[aesthetic_counter],
+                    "marksize" => marksize[aesthetic_counter],
+                    "coordinates" => ivlike_d0_coord[coordinate_idx]
+                )
+                push!(d0weights, segment)
+            end
+
+            println("...collect data for saturated, d = 1") # DEBUG:
+
+            # Store data in dictionary for Mustache.jl for d = 1 weights
+            for coordinate_idx in 1:length(ivlike_d1_coord)
+                segment = Dict(
+                    "pathname" => "d1" * pathtitle(s_ivlike)[saturated_idx] * string(coordinate_idx),
+                    "color" => colors[aesthetic_counter],
+                    "mark" => marks[aesthetic_counter],
+                    "marksize" => marksize[aesthetic_counter],
+                    "coordinates" => ivlike_d1_coord[coordinate_idx]
+                )
+                push!(d1weights, segment)
+            end
+            aesthetic_counter += 1
+        end
+    end
 
     println("...update aesthetic info") # DEBUG:
 

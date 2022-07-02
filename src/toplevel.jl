@@ -58,6 +58,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 4
             savedir, _ = setup(savelocation, stub = "np-ivnps")
             run_np_ivnps(savedir, compile)
+        elseif figure_choice == 5
+            savedir, _ = setup(savelocation, stub = "np-sharp")
+            run_np_sharp(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
@@ -164,6 +167,32 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
     texfn = mtrs_and_weights(savedir, "np-ivnps";
+        dgp = dgp,
+        tp = late(dgp, 0.35, 0.9),
+        basis = basis,
+        assumptions = assumptions,
+        mtroption = "max",
+        opts = opts
+    )
+    if compile
+        compile_latex(texfn)
+    end
+end
+
+# Figure 5: maximizing MTRs for sharp LATE(0.35, 0.90) bounds
+function run_np_sharp(savedir::String, compile::Bool = false)
+    dgp = dgp_econometrica()
+    knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
+    basis = [(constantspline_basis(knots),
+              constantspline_basis(knots))]
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => true
+    )
+    opts = defaults_econometrica()
+    opts[1][:title] = "Nonparametric bounds"
+    texfn = mtrs_and_weights(savedir, "np-sharp";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
         basis = basis,
