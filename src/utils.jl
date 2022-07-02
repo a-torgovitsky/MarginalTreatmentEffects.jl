@@ -79,11 +79,21 @@ function df_to_coordinates(df, xindex, yindex; steps = nothing)
         end
     else
         coordinates = Vector{String}() # initialize empty vector of strings
-        for segment_idx in 1:(nrow(df) - 1)
+        for segment_idx in 1:nrow(df)
+            yval = y[segment_idx]
+            if yval ≈ 0
+                continue
+            end
             endpoints = ""
             lb = x[segment_idx]
-            ub = x[segment_idx + 1]
-            yval = y[segment_idx]
+            if segment_idx == nrow(df)
+                ub = 1
+            else
+                ub = x[segment_idx + 1]
+            end
+            println("ub:", ub) # DEBUG:
+            println("lb:", lb) # DEBUG:
+            println("yval:", yval) # DEBUG:
             grid = round.(range(lb, ub, step = steps), digits = 3)
             unique!(push!(grid, ub)) # ensure that ub is in grid
             for point_idx in 1:length(grid)
@@ -127,6 +137,8 @@ end
 function pathtitle(ivlike::IVLike)
     if ivlike.name == "IV Slope"
         title = "ivs"
+    elseif ivlike.name == "OLS Slope"
+        title = "olss"
     end
     return title
 end

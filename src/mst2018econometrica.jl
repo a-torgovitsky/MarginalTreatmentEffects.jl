@@ -139,7 +139,6 @@ function mtrs_and_weights(
         "marksize" => marksize[aesthetic_counter],
         "legendtitle" => legendtitle(tp)
     ))
-    println("...finished") # DEBUG:
     for coordinate_idx in 1:length(tp_d0_coord)
         segment = Dict(
             "pathname" => "d0" * pathtitle(tp) * string(coordinate_idx),
@@ -190,10 +189,10 @@ function mtrs_and_weights(
         # Store data in dictionary for Mustache.jl for d = 0 weights
         for coordinate_idx in 1:length(ivlike_d0_coord)
             segment = Dict(
-                "pathname" => "d0ivslope" * string(coordinate_idx),
-                "color" => "darkgray",
-                "mark" => "x",
-                "marksize" => "2.5pt",
+                "pathname" => "d0" * pathtitle(s) * string(coordinate_idx),
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
                 "coordinates" => ivlike_d0_coord[coordinate_idx]
             )
             push!(d0weights, segment)
@@ -204,10 +203,59 @@ function mtrs_and_weights(
         # Store data in dictionary for Mustache.jl for d = 1 weights
         for coordinate_idx in 1:length(ivlike_d1_coord)
             segment = Dict(
-                "pathname" => "d1ivslope" * string(coordinate_idx),
-                "color" => "darkgray",
-                "mark" => "x",
-                "marksize" => "2.5pt",
+                "pathname" => "d1" * pathtitle(s) * string(coordinate_idx),
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
+                "coordinates" => ivlike_d1_coord[coordinate_idx]
+            )
+            push!(d1weights, segment)
+        end
+        aesthetic_counter += 1
+    end
+
+    if haskey(assumptions, :olsslope)
+        println("...collect data for olsslope") # DEBUG:
+        ivlike_d0_coord = Vector()
+        ivlike_d1_coord = Vector()
+        s = olsslope(dgp)
+        s_weights = compute_average_weights(s, dgp)
+        push!(ivlike_weights, s_weights[:, 2]...)
+        push!(ivlike_weights, s_weights[:, 3]...)
+        d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
+        push!(ivlike_d0_coord, d0_coordinates...)
+        d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
+        push!(ivlike_d1_coord, d1_coordinates...)
+        push!(legend, Dict(
+            "color" => colors[aesthetic_counter],
+            "mark" => marks[aesthetic_counter],
+            "marksize" => marksize[aesthetic_counter],
+            "legendtitle" => legendtitle(s)
+        ))
+
+        println("...collect data for olsslope, d = 0") # DEBUG:
+
+        # Store data in dictionary for Mustache.jl for d = 0 weights
+        for coordinate_idx in 1:length(ivlike_d0_coord)
+            segment = Dict(
+                "pathname" => "d0" * pathtitle(s) * string(coordinate_idx),
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
+                "coordinates" => ivlike_d0_coord[coordinate_idx]
+            )
+            push!(d0weights, segment)
+        end
+
+        println("...collect data for olsslope, d = 1") # DEBUG:
+
+        # Store data in dictionary for Mustache.jl for d = 1 weights
+        for coordinate_idx in 1:length(ivlike_d1_coord)
+            segment = Dict(
+                "pathname" => "d1" * pathtitle(s) * string(coordinate_idx),
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
                 "coordinates" => ivlike_d1_coord[coordinate_idx]
             )
             push!(d1weights, segment)
