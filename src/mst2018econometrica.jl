@@ -263,6 +263,64 @@ function mtrs_and_weights(
         aesthetic_counter += 1
     end
 
+    if haskey(assumptions, :ivslopeind)
+        s_ivlike = ivslope_indicator(dgp; support = assumptions[:ivslopeind])
+        for support_idx in 1:length(s_ivlike.params[:support])
+            zind = s_ivlike.params[:support][support_idx]
+            println("ivslope ind: ", zind, " Z = ", dgp.suppZ[zind])
+            ivlike_d0_coord = Vector()
+            ivlike_d1_coord = Vector()
+            s = IVLike(
+                "IV Slope for 𝟙(Z = " * string(dgp.suppZ[zind]) * ")",
+                [s_ivlike.s[support_idx]],
+                Dict(:support => [dgp.suppZ[zind]])
+            )
+            s_weights = compute_average_weights(s, dgp)
+            push!(ivlike_weights, s_weights[:, 2]...)
+            push!(ivlike_weights, s_weights[:, 3]...)
+            d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
+            push!(ivlike_d0_coord, d0_coordinates...)
+            d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
+            push!(ivlike_d1_coord, d1_coordinates...)
+            push!(legend, Dict(
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
+                "legendtitle" => legendtitle(s_ivlike)[support_idx]
+            ))
+
+            println("...collect data for ivslope, d = 0, z = " * string(dgp.suppZ[zind])) # DEBUG:
+
+            # Store data in dictionary for Mustache.jl for d = 0 weights
+            for coordinate_idx in 1:length(ivlike_d0_coord)
+                segment = Dict(
+                    "pathname" => "d0" * pathtitle(s_ivlike)[support_idx] * string(coordinate_idx),
+                    "color" => colors[aesthetic_counter],
+                    "mark" => marks[aesthetic_counter],
+                    "marksize" => marksize[aesthetic_counter],
+                    "coordinates" => ivlike_d0_coord[coordinate_idx]
+                )
+                push!(d0weights, segment)
+            end
+
+            println("...collect data for ivslope, d = 1, z = " * string(dgp.suppZ[zind])) # DEBUG:
+
+            # Store data in dictionary for Mustache.jl for d = 1 weights
+            for coordinate_idx in 1:length(ivlike_d1_coord)
+                segment = Dict(
+                    "pathname" => "d1" * pathtitle(s_ivlike)[support_idx] * string(coordinate_idx),
+                    "color" => colors[aesthetic_counter],
+                    "mark" => marks[aesthetic_counter],
+                    "marksize" => marksize[aesthetic_counter],
+                    "coordinates" => ivlike_d1_coord[coordinate_idx]
+                )
+                push!(d1weights, segment)
+            end
+
+            aesthetic_counter += 1
+        end
+    end
+
 
     println("...update aesthetic info") # DEBUG:
 

@@ -122,7 +122,14 @@ function legendtitle(tp::TargetParameter)
     return title
 end
 function legendtitle(ivlike::IVLike)
-    return ivlike.name
+    title = ivlike.name
+    if occursin("IV Slope for 𝟙(Z == z) for z ∈", ivlike.name)
+        title = Vector{String}()
+        for z in ivlike.params[:support]
+            push!(title, "\$\\mathbb{1}[Z = $z]\$")
+        end
+    end
+    return title
 end
 
 # Generate the title used in path for cross-referencing
@@ -139,6 +146,8 @@ function pathtitle(ivlike::IVLike)
         title = "ivs"
     elseif ivlike.name == "OLS Slope"
         title = "olss"
+    elseif occursin("IV Slope for 𝟙(Z == z) for z ∈", ivlike.name)
+        title = "ivnps" .* string.(ivlike.params[:support])
     end
     return title
 end

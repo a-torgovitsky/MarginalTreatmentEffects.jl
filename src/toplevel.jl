@@ -55,6 +55,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 3
             savedir, _ = setup(savelocation, stub = "np-ivs-olss")
             run_np_ivs_olss(savedir, compile)
+        elseif figure_choice == 4
+            savedir, _ = setup(savelocation, stub = "np-ivnps")
+            run_np_ivnps(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
@@ -134,6 +137,33 @@ function run_np_ivs_olss(savedir::String, compile::Bool = false)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
     texfn = mtrs_and_weights(savedir, "np-ivs-olss";
+        dgp = dgp,
+        tp = late(dgp, 0.35, 0.9),
+        basis = basis,
+        assumptions = assumptions,
+        mtroption = "max",
+        opts = opts
+    )
+    if compile
+        compile_latex(texfn)
+    end
+end
+
+# Figure 4: maximizing MTRs for LATE(0.35, 0.90) with Nonparametric IV Slope
+function run_np_ivnps(savedir::String, compile::Bool = false)
+    dgp = dgp_econometrica()
+    knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
+    basis = [(constantspline_basis(knots),
+              constantspline_basis(knots))]
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => false,
+        :ivslopeind => [2, 3],
+    )
+    opts = defaults_econometrica()
+    opts[1][:title] = "Nonparametric bounds"
+    texfn = mtrs_and_weights(savedir, "np-ivnps";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
         basis = basis,
