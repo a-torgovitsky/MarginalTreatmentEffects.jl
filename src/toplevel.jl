@@ -67,6 +67,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 7
             savedir, _ = setup(savelocation, stub = "np-sharp-decr-k10")
             run_np_sharp_decr_k10(savedir, compile)
+        elseif figure_choice == 8
+            savedir, _ = setup(savelocation, stub = "tikz-extrapolate")
+            run_tikz_extrapolate(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
@@ -259,6 +262,14 @@ function run_np_sharp_decr_k10(savedir::String, compile::Bool = false)
         mtroption = "max",
         opts = opts
     )
+    if compile
+        compile_latex(texfn)
+    end
+end
+
+# Figure 8: Bounds on LATE(0.35, ̄u)
+function run_tikz_extrapolate(savedir::String, compile::Bool = false)
+    texfn = tikz_extrapolate(savedir, "tikz-extrapolate")
     if compile
         compile_latex(texfn)
     end

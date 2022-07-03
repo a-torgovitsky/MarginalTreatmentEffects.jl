@@ -1,0 +1,131 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{plotmarks}
+\usetikzlibrary{spy}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{pdflscape}
+\usepackage{fullpage}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+
+\thispagestyle{empty} % No page number so you can crop correctly
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MUSTACHE VARIABLES
+%
+% lbsegments - lower bound
+% ubsegments - upper bound
+% truesegments - actual value
+%   Notes:
+%     Each of these variables is a vector of dictionaries.
+%     Each dictionary has a single key called "coordinates" that contains the
+%     segment-specific coordinates.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\PLOTLINEWIDTH}{.9pt}
+
+\begin{document}
+\begin{landscape}
+\begin{center}
+
+\large{Bounds on $\text{LATE}(.35, \overline{u})$}
+
+\begin{tikzpicture}[,
+    font=\large,
+    spy using overlays={rectangle, magnification=2.5, height=2cm, width=8cm, connect spies}
+]
+
+\begin{axis}[%
+width=6in,
+height=4in,
+ytick distance = .025,
+ymin=-.0499,
+ymax=.1499,
+yticklabel style={
+        /pgf/number format/fixed,
+        /pgf/number format/precision=3,
+        /pgf/number format/skip 0.=true,
+        font=\normalsize
+},
+scaled y ticks=false,
+xmin=.38,
+xmax=1,
+xtick distance=.05,
+xticklabel style={
+        /pgf/number format/fixed,
+        /pgf/number format/precision=2,
+        /pgf/number format/skip 0.=true,
+        font=\normalsize
+},
+xlabel={$\overline{u}$},
+axis lines* = left
+]
+
+\draw [dashed] (.9, -.05) -- (.9, .15);
+
+% upper bound
+<<#:ubsegments>>
+\addplot [  color=darkgray,
+            solid,
+            line width=\PLOTLINEWIDTH,
+            mark = *,
+            mark repeat = 5,
+            mark size = .8pt]
+            coordinates{
+              <<coordinates>>
+            };
+<</:ubsegments>>
+
+% lower bound
+<<#:lbsegments>>
+\addplot [  color=lightgray,
+            solid,
+            line width=\PLOTLINEWIDTH,
+            mark = *,
+            mark repeat = 5,
+            mark size = .8pt]
+            coordinates{
+              <<coordinates>>
+            };
+<</:lbsegments>>
+
+% truth bound
+<<#:truesegments>>
+\addplot [  color=black,
+            solid,
+            line width=\PLOTLINEWIDTH]
+            coordinates{
+              <<coordinates>>
+            };
+<</:truesegments>>
+
+\legend{Upper Bound, Lower Bound, Actual Value}
+
+\end{axis}
+
+\spy [gray] on (6, 5.3) in node [left] at (9,2);
+
+\end{tikzpicture}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{center}
+\end{landscape}
+\end{document}

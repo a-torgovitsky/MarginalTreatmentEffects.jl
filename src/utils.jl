@@ -74,20 +74,21 @@ end
 # coordinates because we know the weights are piecewise-constant. Hence, we can
 # draw them without approximation. On the other hand, we don't know where the
 # MTRs are discontinuous. So, we discover where they have discontinuities by
-# checking the slopes of the secant lines between two consecutive points. This
-# determines the segments.
+# checking the slopes of the secant lines between two consecutive points. If
+# the magnitude of the slopes is larger than `tol`, then we have found a
+# discontinuity. These discontinuities determine the segments.
 #
 # TODO: is there a way to combine these two frameworks? Maybe using the basis
 # for the MTRs can help determine whether we should "discover" the cutoffs...?
 # TODO: use multiple dispatch to get rid of `isnothing(steps)` conditional.
-function df_to_coordinates(df, xindex, yindex; steps = nothing)
-    x = round.(df[:, xindex], digits = 3)
-    y = round.(df[:, yindex], digits = 3)
+function df_to_coordinates(df, xindex, yindex; steps = nothing, tol::Number = 7)
+    x = round.(df[:, xindex], digits = 4)
+    y = round.(df[:, yindex], digits = 4)
     coordinates = Vector{String}() # initialize empty vector of strings
     if isnothing(steps)
         lagdiff = v -> v - vcat(v[2:length(v)], 0)
         slope = lagdiff(y) ./ lagdiff(x)
-        disc = findall(abs.(slope) .> 7) # slope > 7 => discontinuity
+        disc = findall(abs.(slope) .> tol)
         segment = ""
         for i in 1:nrow(df)
             segment = segment *
