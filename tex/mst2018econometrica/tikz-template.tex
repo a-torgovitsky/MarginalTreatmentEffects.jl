@@ -219,7 +219,9 @@ legend style={
 every axis legend/.append style={nodes={right}}
 ]
 
-    \addlegendimage{/pgfplots/refstyle=mtr0}
+    % inherit properties associated with the `path-mtr01` path name, which is the
+    % path of the first segment of MTR for d = 0
+    \addlegendimage{/pgfplots/refstyle=path-mtr01}
     \addlegendentry{<<:mtrlegendtext>>}
 
     <<#:d0weights>>
