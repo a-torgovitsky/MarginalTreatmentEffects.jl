@@ -84,7 +84,12 @@ function menu(savelocation::String = "."; compile::Bool = false)
             @error "ERROR: invalid choice" project_choice figure_choice
         end
     elseif project_choice == 2
-        @error "WIP" project_choice figure_choice
+        if figure_choice == 1
+            savedir, _ = setup(savelocation, stub = "tikz-mtr")
+            run_tikz_mtr(savedir, compile)
+        else
+            @error "WIP" project_choice figure_choice
+        end
     end
 end
 export menu

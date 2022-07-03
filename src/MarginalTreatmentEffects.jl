@@ -11,6 +11,7 @@ module MarginalTreatmentEffects
     include("utils.jl")
     include("plotting.jl")
     include("mst2018econometrica.jl")
+    include("mt2018review.jl")
     include("toplevel.jl")
 
 end
