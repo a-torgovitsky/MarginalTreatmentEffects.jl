@@ -14,7 +14,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
     project_choice = parse(Int64, project_choice)
 
     println("What figure do you want to reproduce?")
-    println("\t 0. All figures")
+    println("\t 0. Everything")
     if project_choice == 1
         dirname = "mst2018econometrica" # tex/dirname contains tex templates
         println("\t 1. DGP MTRs and Weights for LATE & IV Slope (Figure 1)")
@@ -70,8 +70,18 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 8
             savedir, _ = setup(savelocation, stub = "tikz-extrapolate")
             run_tikz_extrapolate(savedir, compile)
+        elseif figure_choice == 0
+            savedir, _ = setup(savelocation, stub = "everything")
+            run_np_ivs_notitle(savedir, compile)
+            run_np_ivs(savedir, compile)
+            run_np_ivs_olss(savedir, compile)
+            run_np_ivnps(savedir, compile)
+            run_np_sharp(savedir, compile)
+            run_np_sharp_decr(savedir, compile)
+            run_np_sharp_decr_k10(savedir, compile)
+            run_tikz_extrapolate(savedir, compile)
         else
-            @error "WIP" project_choice figure_choice
+            @error "ERROR: invalid choice" project_choice figure_choice
         end
     elseif project_choice == 2
         @error "WIP" project_choice figure_choice
