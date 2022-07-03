@@ -33,7 +33,7 @@ function defaults_econometrica()
         :xlabel => "\$u\$",
         :ylabelbuffer => "1.20",
         :ylabeltextwidth => "1in",
-        :ylabelweights => nothing
+        :ylabelweights =>  "Weights (where \$\\neq 0\$)"
     )
 
     colors = ["gray", "darkgray", "lightgray", "darkgray", "lightgray",
@@ -83,10 +83,10 @@ function mtrs_and_weights(
     mtroption::String,
     opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}}
 )
-    # TODO: separate mtr data from aesthetic information in settings
-
     # initialize
     settings, colors, marks, marksize = opts # aesthetic information
+    m0segments = Vector{Dict}() # keeps track of MTR segments for d = 0
+    m1segments = Vector{Dict}() # keeps track of MTR segments for d = 1
     d0weights = Vector{Dict}() # keeps track of weight segments for d = 0
     d1weights = Vector{Dict}() # keeps track of weight segments for d = 1
     legend = Vector{Dict}() # keeps track of legend entries
@@ -123,10 +123,23 @@ function mtrs_and_weights(
     println("...store MTR data in dictionary") # DEBUG:
 
     # Store MTR data in dictionary for Mustache.jl
-    settings[:m0coordinates] = df_to_coordinates(mtr_results, :u, :mtr0)
-    settings[:m1coordinates] = df_to_coordinates(mtr_results, :u, :mtr1)
-    settings[:ylabelweights] = "Weights (where \$\\neq 0\$)"
-
+    # TODO: avoid duplication b/t the for-loops for mtr0 and mtr1
+    m0coordinates = df_to_coordinates(mtr_results, :u, :mtr0)
+    for coordinate_idx in 1:length(m0coordinates)
+        segment = Dict(
+            "pathname" => "mtr0" * string(coordinate_idx),
+            "coordinates" => m0coordinates[coordinate_idx]
+        )
+        push!(m0segments, segment)
+    end
+    m1coordinates = df_to_coordinates(mtr_results, :u, :mtr1)
+    for coordinate_idx in 1:length(m1coordinates)
+        segment = Dict(
+            "pathname" => "mtr1" * string(coordinate_idx),
+            "coordinates" => m1coordinates[coordinate_idx]
+        )
+        push!(m1segments, segment)
+    end
 
     # Collect data for target parameter
     tp_weights = compute_average_weights(tp)
@@ -164,7 +177,10 @@ function mtrs_and_weights(
     println("...collect data for ivlike") # DEBUG:
 
     # Collect data for IV-like estimands
+    # TODO: within each if-block, the code is quite similar across the IV-like
+    # etimands. Can we avoid the duplication?
     ivlike_weights = Vector() # used to compute max and min weights
+
     if haskey(assumptions, :ivslope) && assumptions[:ivslope]
         println("...collect data for ivslope") # DEBUG:
         ivlike_d0_coord = Vector()
@@ -400,6 +416,8 @@ function mtrs_and_weights(
     tex = render(
         template;
         settings...,
+        m0segments = m0segments,
+        m1segments = m1segments,
         d0weights = d0weights,
         d1weights = d1weights,
         legend = legend

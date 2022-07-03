@@ -101,6 +101,15 @@
 %     These variables are also the keys in a dictionary and the values in this
 %     dictionary will replace the corresponding placeholders in this template.
 %
+% m0segments
+% m1segments
+%   Notes:
+%     The MTR functions are split up into segments based on where
+%     discontinuities arise.
+%     Each segment will have its own dictionary with the following keys:
+%       pathname
+%       coordinates
+%
 % d0weights
 % d1weights
 %   Notes:
@@ -165,15 +174,17 @@ hide y axis
 ]
 \addplot[name path=zero, draw=none, forget plot] {0};
 
-\addplot[name path=mtr0,
+<<#:m0segments>>
+\addplot[name path=<<pathname>>,
          color=black,
          on layer={axis foreground},
          solid,
-         line width = <<:linewidthmtr>>]
+         line width = <<~:linewidthmtr>>]
          coordinates{
-           <<:m0coordinates>>
+           <<coordinates>>
          };
-\label{mtr0}
+\label{path-<<pathname>>}
+<</:m0segments>>
 
 \end{axis}
 
@@ -272,14 +283,18 @@ y label style={at={(ticklabel* cs:<<:ylabelbuffer>>)},
 ]
 \addplot[name path=zero, draw=none, forget plot] {0};
 
-\addplot[name path=mtr1,
+<<#:m1segments>>
+\addplot[name path=<<pathname>>,
          color=black,
          on layer={axis foreground},
          solid,
-         line width = <<:linewidthmtr>>]
+         line width = <<~:linewidthmtr>>]
          coordinates{
-           <<:m1coordinates>>
+           <<coordinates>>
          };
+\label{path-<<pathname>>}
+<</:m1segments>>
+
 
 \end{axis}
 %%% WEIGHTS

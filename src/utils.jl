@@ -64,21 +64,43 @@ function setup(savelocation::String;
 end
 
 # Create coordinates for \addplot
-# If steps is not specified, return a string of coordinates to draw curves
-# If steps is specified, return a vector of coordinates (i.e., endpoints)
-# steps controls how far apart the points are.
-# This is particularly useful when drawing tick marks.
+# If `steps` is not specified, return a vector of coordinates, where
+#   discontinuities separate vectors from one another.
+#   This is particularly useful when drawing the MTRs.
+# If `steps` is specified, return a vector of coordinates (i.e., endpoints)
+#   `steps` controls how far apart the points are.
+#   This is particularly useful when drawing tick marks for the weights.
+# The MTRs and the weights use different strategies for creating their
+# coordinates because we know the weights are piecewise-constant. Hence, we can
+# draw them without approximation. On the other hand, we don't know where the
+# MTRs are discontinuous. So, we discover where they have discontinuities by
+# checking the slopes of the secant lines between two consecutive points. This
+# determines the segments.
+#
+# TODO: is there a way to combine these two frameworks? Maybe using the basis
+# for the MTRs can help determine whether we should "discover" the cutoffs...?
+# TODO: use multiple dispatch to get rid of `isnothing(steps)` conditional.
 function df_to_coordinates(df, xindex, yindex; steps = nothing)
     x = round.(df[:, xindex], digits = 3)
     y = round.(df[:, yindex], digits = 3)
+    coordinates = Vector{String}() # initialize empty vector of strings
     if isnothing(steps)
-        coordinates = ""
+        lagdiff = v -> v - vcat(v[2:length(v)], 0)
+        slope = lagdiff(y) ./ lagdiff(x)
+        disc = findall(abs.(slope) .> 7) # slope > 7 => discontinuity
+        segment = ""
         for i in 1:nrow(df)
-            coordinates = coordinates *
+            segment = segment *
                 "(" * string(x[i]) * "," * string(y[i]) * ")"
+            if i in disc
+                push!(coordinates, segment)
+                segment = ""
+            end
+            if i == nrow(df)
+                push!(coordinates, segment)
+            end
         end
     else
-        coordinates = Vector{String}() # initialize empty vector of strings
         for segment_idx in 1:nrow(df)
             yval = y[segment_idx]
             if yval ≈ 0
@@ -91,9 +113,6 @@ function df_to_coordinates(df, xindex, yindex; steps = nothing)
             else
                 ub = x[segment_idx + 1]
             end
-            println("ub:", ub) # DEBUG:
-            println("lb:", lb) # DEBUG:
-            println("yval:", yval) # DEBUG:
             grid = round.(range(lb, ub, step = steps), digits = 3)
             unique!(push!(grid, ub)) # ensure that ub is in grid
             for point_idx in 1:length(grid)
