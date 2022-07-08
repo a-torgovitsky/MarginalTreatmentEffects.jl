@@ -71,6 +71,8 @@ function legendtitle(tp::TargetParameter)
         lb = tp.int_limits(1)[1]
         ub = tp.int_limits(1)[2]
         title = "LATE(\$ $(@sprintf("%.2f", lb)), $(@sprintf("%.2f", ub)) \$)"
+    elseif tp.name == "ATT"
+        title = "ATT"
     else
         @error "WIP" tp.name
     end
@@ -83,6 +85,9 @@ function legendtitle(ivlike::IVLike)
         for z in ivlike.params[:support]
             push!(title, "\$\\mathbb{1}[Z = $z]\$")
         end
+    end
+    if occursin("TSLS Slope for 𝟙(Z == z) for z ∈", ivlike.name)
+        title = "TSLS Slope"
     end
     if ivlike.name == "Saturated"
         title = Vector{String}()
@@ -103,6 +108,8 @@ end
 function pathtitle(tp::TargetParameter)
     if tp.name == "LATE(u₁, u₂)"
         title = "late"
+    elseif tp.name == "ATT"
+        title = "att"
     else
         @error "WIP" tp.name
     end
@@ -115,6 +122,8 @@ function pathtitle(ivlike::IVLike)
         title = "olss"
     elseif occursin("IV Slope for 𝟙(Z == z) for z ∈", ivlike.name)
         title = "ivnps" .* string.(ivlike.params[:support])
+    elseif occursin("TSLS Slope for 𝟙(Z == z) for z ∈", ivlike.name)
+        title = "tslss"
     elseif ivlike.name == "Saturated"
         title = "saturated" .* string(collect(1:length(ivlike.s)))
     end
@@ -166,10 +175,10 @@ function mtrs_and_weights(
     basis::Vector{Tuple{MTRBasis, MTRBasis}},
     assumptions::Dict,
     mtroption::String,
-    opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}}
+    opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}, Vector{String}}
 )
     # initialize
-    settings, colors, marks, marksize = opts # aesthetic information
+    settings, colors, marks, marksize, linetype = opts # aesthetic information
     m0segments = Vector{Dict}() # keeps track of MTR segments for d = 0
     m1segments = Vector{Dict}() # keeps track of MTR segments for d = 1
     d0weights = Vector{Dict}() # keeps track of weight segments for d = 0
@@ -185,15 +194,18 @@ function mtrs_and_weights(
         mtr0 = dgp.mtrs[1]
         mtr1 = dgp.mtrs[2]
         settings[:mtrlegendtext] = "DGP MTRs"
+        settings[:title] = settings[:title] * settings[:titlesuffix]
     elseif mtroption == "max"
         mtr0 = result[:mtr_ub][1][1]
         mtr1 = result[:mtr_ub][1][2]
-        settings[:title] = settings[:title] * parse_bounds(result)
+        settings[:title] = settings[:title] * parse_bounds(result) *
+            settings[:titlesuffix]
         settings[:mtrlegendtext] = "Maximizing MTRs"
     elseif mtroption == "min"
         mtr0 = result[:mtr_lb][1][1]
         mtr1 = result[:mtr_lb][1][2]
-        settings[:title] = settings[:title] * parse_bounds(result)
+        settings[:title] = settings[:title] * parse_bounds(result) *
+            settings[:titlesuffix]
         settings[:mtrlegendtext] = "Minimizing MTRs"
     else
         @error "unsupported" mtroption
@@ -225,14 +237,15 @@ function mtrs_and_weights(
     end
 
     # Collect data for target parameter
-    tp_weights = compute_average_weights(tp)
+    tp_weights = compute_average_weights(tp, dgp)
     tp_d0_coord = df_to_coordinates(tp_weights, :u, 3, steps = 1/step)
     tp_d1_coord = df_to_coordinates(tp_weights, :u, 2, steps = 1/step)
     push!(legend, Dict(
         "color" => colors[aesthetic_counter],
         "mark" => marks[aesthetic_counter],
         "marksize" => marksize[aesthetic_counter],
-        "legendtitle" => legendtitle(tp)
+        "legendtitle" => legendtitle(tp),
+        "linetype" => linetype[aesthetic_counter]
     ))
     for coordinate_idx in 1:length(tp_d0_coord)
         segment = Dict(
@@ -240,7 +253,8 @@ function mtrs_and_weights(
             "color" => colors[aesthetic_counter],
             "mark" => marks[aesthetic_counter],
             "marksize" => marksize[aesthetic_counter],
-            "coordinates" => tp_d0_coord[coordinate_idx]
+            "coordinates" => tp_d0_coord[coordinate_idx],
+            "linetype" => linetype[aesthetic_counter]
         )
         push!(d0weights, segment)
     end
@@ -250,7 +264,8 @@ function mtrs_and_weights(
             "color" => colors[aesthetic_counter],
             "mark" => marks[aesthetic_counter],
             "marksize" => marksize[aesthetic_counter],
-            "coordinates" => tp_d1_coord[coordinate_idx]
+            "coordinates" => tp_d1_coord[coordinate_idx],
+            "linetype" => linetype[aesthetic_counter]
         )
         push!(d1weights, segment)
     end
@@ -276,7 +291,8 @@ function mtrs_and_weights(
             "color" => colors[aesthetic_counter],
             "mark" => marks[aesthetic_counter],
             "marksize" => marksize[aesthetic_counter],
-            "legendtitle" => legendtitle(s)
+            "legendtitle" => legendtitle(s),
+            "linetype" => linetype[aesthetic_counter]
         ))
 
         # Store data in dictionary for Mustache.jl for d = 0 weights
@@ -286,7 +302,8 @@ function mtrs_and_weights(
                 "color" => colors[aesthetic_counter],
                 "mark" => marks[aesthetic_counter],
                 "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d0_coord[coordinate_idx]
+                "coordinates" => ivlike_d0_coord[coordinate_idx],
+                "linetype" => linetype[aesthetic_counter]
             )
             push!(d0weights, segment)
         end
@@ -298,7 +315,8 @@ function mtrs_and_weights(
                 "color" => colors[aesthetic_counter],
                 "mark" => marks[aesthetic_counter],
                 "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d1_coord[coordinate_idx]
+                "coordinates" => ivlike_d1_coord[coordinate_idx],
+                "linetype" => linetype[aesthetic_counter]
             )
             push!(d1weights, segment)
         end
@@ -320,7 +338,8 @@ function mtrs_and_weights(
             "color" => colors[aesthetic_counter],
             "mark" => marks[aesthetic_counter],
             "marksize" => marksize[aesthetic_counter],
-            "legendtitle" => legendtitle(s)
+            "legendtitle" => legendtitle(s),
+            "linetype" => linetype[aesthetic_counter]
         ))
 
         # Store data in dictionary for Mustache.jl for d = 0 weights
@@ -330,7 +349,8 @@ function mtrs_and_weights(
                 "color" => colors[aesthetic_counter],
                 "mark" => marks[aesthetic_counter],
                 "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d0_coord[coordinate_idx]
+                "coordinates" => ivlike_d0_coord[coordinate_idx],
+                "linetype" => linetype[aesthetic_counter]
             )
             push!(d0weights, segment)
         end
@@ -342,7 +362,8 @@ function mtrs_and_weights(
                 "color" => colors[aesthetic_counter],
                 "mark" => marks[aesthetic_counter],
                 "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d1_coord[coordinate_idx]
+                "coordinates" => ivlike_d1_coord[coordinate_idx],
+                "linetype" => linetype[aesthetic_counter]
             )
             push!(d1weights, segment)
         end
@@ -371,7 +392,8 @@ function mtrs_and_weights(
                 "color" => colors[aesthetic_counter],
                 "mark" => marks[aesthetic_counter],
                 "marksize" => marksize[aesthetic_counter],
-                "legendtitle" => legendtitle(s_ivlike)[support_idx]
+                "legendtitle" => legendtitle(s_ivlike)[support_idx],
+                "linetype" => linetype[aesthetic_counter]
             ))
 
             # Store data in dictionary for Mustache.jl for d = 0 weights
@@ -381,7 +403,8 @@ function mtrs_and_weights(
                     "color" => colors[aesthetic_counter],
                     "mark" => marks[aesthetic_counter],
                     "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d0_coord[coordinate_idx]
+                    "coordinates" => ivlike_d0_coord[coordinate_idx],
+                    "linetype" => linetype[aesthetic_counter]
                 )
                 push!(d0weights, segment)
             end
@@ -393,13 +416,61 @@ function mtrs_and_weights(
                     "color" => colors[aesthetic_counter],
                     "mark" => marks[aesthetic_counter],
                     "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d1_coord[coordinate_idx]
+                    "coordinates" => ivlike_d1_coord[coordinate_idx],
+                    "linetype" => linetype[aesthetic_counter]
                 )
                 push!(d1weights, segment)
             end
 
             aesthetic_counter += 1
         end
+    end
+
+    if haskey(assumptions, :tslsslopeind) && assumptions[:tslsslopeind]
+        ivlike_d0_coord = Vector()
+        ivlike_d1_coord = Vector()
+        s = tslsslope_indicator(dgp)
+        s_weights = compute_average_weights(s, dgp)
+        push!(ivlike_weights, s_weights[:, 2]...)
+        push!(ivlike_weights, s_weights[:, 3]...)
+        d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
+        push!(ivlike_d0_coord, d0_coordinates...)
+        d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
+        push!(ivlike_d1_coord, d1_coordinates...)
+        push!(legend, Dict(
+            "color" => colors[aesthetic_counter],
+            "mark" => marks[aesthetic_counter],
+            "marksize" => marksize[aesthetic_counter],
+            "legendtitle" => legendtitle(s),
+            "linetype" => linetype[aesthetic_counter]
+        ))
+
+        # Store data in dictionary for Mustache.jl for d = 0 weights
+        for coordinate_idx in 1:length(ivlike_d0_coord)
+            segment = Dict(
+                "pathname" => "d0" * pathtitle(s) * string(coordinate_idx),
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
+                "coordinates" => ivlike_d0_coord[coordinate_idx],
+                "linetype" => linetype[aesthetic_counter]
+            )
+            push!(d0weights, segment)
+        end
+
+        # Store data in dictionary for Mustache.jl for d = 1 weights
+        for coordinate_idx in 1:length(ivlike_d1_coord)
+            segment = Dict(
+                "pathname" => "d1" * pathtitle(s) * string(coordinate_idx),
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
+                "coordinates" => ivlike_d1_coord[coordinate_idx],
+                "linetype" => linetype[aesthetic_counter]
+            )
+            push!(d1weights, segment)
+        end
+        aesthetic_counter += 1
     end
 
     if haskey(assumptions, :saturated) && assumptions[:saturated]
@@ -424,7 +495,8 @@ function mtrs_and_weights(
                 "color" => colors[aesthetic_counter],
                 "mark" => marks[aesthetic_counter],
                 "marksize" => marksize[aesthetic_counter],
-                "legendtitle" => legendtitle(s_ivlike)[saturated_idx]
+                "legendtitle" => legendtitle(s_ivlike)[saturated_idx],
+                "linetype" => linetype[aesthetic_counter]
             ))
 
             # Store data in dictionary for Mustache.jl for d = 0 weights
@@ -434,7 +506,8 @@ function mtrs_and_weights(
                     "color" => colors[aesthetic_counter],
                     "mark" => marks[aesthetic_counter],
                     "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d0_coord[coordinate_idx]
+                    "coordinates" => ivlike_d0_coord[coordinate_idx],
+                    "linetype" => linetype[aesthetic_counter]
                 )
                 push!(d0weights, segment)
             end
@@ -446,7 +519,8 @@ function mtrs_and_weights(
                     "color" => colors[aesthetic_counter],
                     "mark" => marks[aesthetic_counter],
                     "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d1_coord[coordinate_idx]
+                    "coordinates" => ivlike_d1_coord[coordinate_idx],
+                    "linetype" => linetype[aesthetic_counter]
                 )
                 push!(d1weights, segment)
             end
@@ -463,7 +537,8 @@ function mtrs_and_weights(
     settings[:weightymin] = -1 * settings[:weightymax]
 
     # Create tex file
-    templatefn = joinpath(savedir, "mst2018econometrica", "tikz-template.tex")
+    # `project` is defined in global scope
+    templatefn = joinpath(savedir, project, "tikz-template.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;

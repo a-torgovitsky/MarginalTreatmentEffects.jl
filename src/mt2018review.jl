@@ -10,6 +10,44 @@ function dgp_review()
     )
 end
 
+function defaults_review()
+    settings = Dict(
+        :axisheight => "2in",
+        :axiswidth => "3in",
+        :fontsize => "\\large",
+        :legendcols => 4,
+        :linewidth => "1.7pt",
+        :linewidthmtr => "2.1pt",
+        # :markrepeat => "25",
+        # :markphase => "12",
+        :title => nothing,
+        :titlesuffix => "",
+        :titlevspace => "5pt",
+        :xmin => "0",
+        :xmax => "1",
+        :weightymin => "-8",
+        :weightymax => "8",
+        :mtrlegendtext => nothing,
+        :mtrymin => "-.01",
+        :mtrymax => "1.01",
+        :mtrylabel => "MTR",
+        :mteylabel => "MTE",
+        :xlabel => "\$u\$",
+        :ylabelbuffer => "1.20",
+        :ylabeltextwidth => "1in",
+        :ylabelweights =>  "Weights (where \$\\neq 0\$)"
+    )
+
+    colors = ["gray", "teal", "orange", "cyan!60!black", "red!70!white",
+              "lime!80!black", "red", "yellow!60!black", "pink",
+              "magenta", "teal"]
+    marks = repeat([""], 7)
+    marksize = repeat([""], 7)
+    linetype = vcat("dotted", repeat(["solid"], 6))
+
+    return settings, colors, marks, marksize, linetype
+end
+
 # Figure 1: MTRs and MTE
 function run_tikz_mtr(savedir::String, compile::Bool = false)
     dgp = dgp_review()
@@ -28,9 +66,37 @@ function run_tikz_weights(savedir::String, compile::Bool = false)
     end
 end
 
+# Figure 3: LATE extrapolation
 function run_tikz_late_extrap(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     texfn = late_extrap(savedir, "tikz-late-extrap"; dgp = dgp)
+    if compile
+        compile_latex(texfn)
+    end
+end
+
+# Figure 4: MTRs and Weights for ATT with IV Slope and TSLS Slope
+function run_k4(savedir::String, compile::Bool = false)
+    dgp = dgp_review()
+    basis = [(bernstein_basis(4), bernstein_basis(4))]
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => false,
+        :ivslope => true,
+        :tslsslopeind => true
+    );
+    opts = defaults_review()
+    opts[1][:title] = "Bounds"
+    opts[1][:titlesuffix] = " -- shown at upper bound"
+    texfn = mtrs_and_weights(savedir, "k4";
+        dgp = dgp,
+        tp = att(dgp),
+        basis = basis,
+        assumptions = assumptions,
+        mtroption = "max",
+        opts = opts
+    )
     if compile
         compile_latex(texfn)
     end

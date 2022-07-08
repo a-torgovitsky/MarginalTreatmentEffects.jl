@@ -16,7 +16,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
     println("What figure do you want to reproduce?")
     println("\t 0. Everything")
     if project_choice == 1
-        dirname = "mst2018econometrica" # tex/dirname contains tex templates
+        global project = "mst2018econometrica" # tex/dirname contains tex templates
         println("\t 1. DGP MTRs and Weights for LATE & IV Slope (Figure 1)")
         println("\t 2. LATE Bounds w/ IV Slope (Figure 2)")
         println("\t 3. LATE Bounds w/ IV & OLS Slopes (Figure 3)")
@@ -26,7 +26,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
         println("\t 7. Sharp LATE Bounds w/ decr., 9th degree MTRs (Figure 7)")
         println("\t 8. Bounds on Family of PRTEs (Figure 8)")
     elseif project_choice == 2
-        dirname = "mt2018review"
+        global project = "mt2018review"
         println("\t 1. DGP MTRs and MTE (Figure 1)")
         println("\t 2. Weights for Conventional Target Parameters (Figure 2)")
         println("\t 3. Extrapolated LATEs (Figure 3)")
@@ -93,6 +93,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 3
             savedir, _ = setup(savelocation, stub = "tikz-late-extrap")
             run_tikz_late_extrap(savedir, compile)
+        elseif figure_choice == 4
+            savedir, _ = setup(savelocation, stub = "k4")
+            run_k4(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end

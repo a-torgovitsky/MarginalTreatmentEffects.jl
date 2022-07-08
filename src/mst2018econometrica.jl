@@ -21,6 +21,7 @@ function defaults_econometrica()
         :markrepeat => "25",
         :markphase => "12",
         :title => nothing,
+        :titlesuffix => "",
         :titlevspace => "5pt",
         :xmin => "0",
         :xmax => "1",
@@ -40,8 +41,9 @@ function defaults_econometrica()
               "darkgray", "lightgray"]
     marks = ["*", "x", "diamond*", "square*", "|", "triangle*", "pentagon*"]
     marksize = ["1pt", "2.5pt", "1.5pt", "1.25pt", "3pt", "1.25pt", "1.25pt"]
+    linetype = repeat(["solid"], 7)
 
-    return settings, colors, marks, marksize
+    return settings, colors, marks, marksize, linetype
 end
 
 # Figure 1: DGP MTRs and weights for LATE(0.35, 0.90) and IV Slope

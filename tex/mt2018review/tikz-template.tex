@@ -230,11 +230,11 @@ every axis legend/.append style={nodes={right}}
       \addplot[name path=<<pathname>>,
                forget plot,
                color=<<color>>,
-               mark=<<mark>>,
-               mark size=<<marksize>>,
-               mark repeat=<<~:markrepeat>>,
-               mark phase=<<~:markphase>>,
-               solid,
+               % mark=<<mark>>,
+               % mark size=<<marksize>>,
+               % mark repeat=<<~:markrepeat>>,
+               % mark phase=<<~:markphase>>,
+               <<linetype>>,
                line width=<<~:linewidth>>]
                coordinates{
                  <<coordinates>>
@@ -244,11 +244,11 @@ every axis legend/.append style={nodes={right}}
 
     <<#:legend>>
       \addlegendimage{
-        solid,
+        <<linetype>>,
         color=<<color>>,
-        mark=<<mark>>,
+        % mark=<<mark>>,
         line width=<<~:linewidth>>,
-        mark size=<<marksize>>
+        % mark size=<<marksize>>
       }
       \addlegendentry{<<legendtitle>>}
     <</:legend>>
@@ -320,11 +320,11 @@ axis x line*=bottom,
       \addplot[name path=<<pathname>>,
                forget plot,
                color=<<color>>,
-               mark=<<mark>>,
-               mark size=<<marksize>>,
-               mark repeat=<<~:markrepeat>>,
-               mark phase=<<~:markphase>>,
-               solid,
+               % mark=<<mark>>,
+               % mark size=<<marksize>>,
+               % mark repeat=<<~:markrepeat>>,
+               % mark phase=<<~:markphase>>,
+               <<linetype>>,
                line width=<<~:linewidth>>]
                coordinates{
                  <<coordinates>>
