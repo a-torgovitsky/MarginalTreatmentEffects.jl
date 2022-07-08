@@ -129,6 +129,15 @@ function run_k9(savedir::String, compile::Bool = false)
     end
 end
 
+# Figure 6: Bounds on ATT for different polynomial degrees
+function run_kbounds(savedir::String, compile::Bool = false)
+    dgp = dgp_review()
+    texfn = kbounds(savedir, "kbounds"; dgp = dgp)
+    if compile
+        compile_latex(texfn)
+    end
+end
+
 # Plot MTRs and MTE
 function mtr_mte(
     savedir::String,
@@ -506,6 +515,152 @@ function late_extrap(
         curves = curves,
         xpos = xpos,
         xlabel = xlabel
+    )
+    texfn = joinpath(dirname(templatefn), filename * ".tex")
+    open(texfn, "w") do file
+        write(file, tex)
+    end
+    return texfn
+end
+
+# Plot bounds for different polynomial degrees
+function kbounds(
+    savedir::String,
+    filename::String;
+    dgp::DGP
+)
+    # initialize
+    curves = Vector{Dict}()
+
+    # setup
+    nondecr = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => false,
+        :ivslope => true,
+        :tslsslopeind => true
+    )
+    decr = copy(nondecr)
+    decr[:decreasing_level] = [(1, 0), (1, 1)]
+
+    # ypos
+    tp = att(dgp)
+    basis = [(bernstein_basis(2), bernstein_basis(2))]
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => true,
+    )
+    r = compute_bounds(tp, basis, assumptions, dgp)
+    ypos = round(r[:lb], digits = 4)
+
+    # get data
+    results = DataFrame(degree = 1:1:19)
+    results[:, "LB Polynomial"] .= NaN
+    results[:, "UB Polynomial"] .= NaN
+    results[:, "LB Nonparametric"] .= NaN
+    results[:, "UB Nonparametric"] .= NaN
+    results[:, "LB Polynomial, Decreasing"] .= NaN
+    results[:, "UB Polynomial, Decreasing"] .= NaN
+    results[:, "LB Nonparametric, Decreasing"] .= NaN
+    results[:, "UB Nonparametric, Decreasing"] .= NaN
+    for row in 1:nrow(results)
+        bases = [(bernstein_basis(results[row, :degree]),
+                  bernstein_basis(results[row, :degree]))]
+        r = compute_bounds(tp, bases, nondecr, dgp)
+        results[row, 2:3] = [r[:lb], r[:ub]]
+        r = compute_bounds(tp, bases, decr, dgp)
+        results[row, 6:7] = [r[:lb], r[:ub]]
+
+        knots = vcat(0, 1, dgp.pscore)
+        bases = [(constantspline_basis(knots),
+                  constantspline_basis(knots))]
+        r = compute_bounds(tp, bases, nondecr, dgp)
+        results[row, 4:5] = [r[:lb], r[:ub]]
+        r = compute_bounds(tp, bases, decr, dgp)
+        results[row, 8:9] = [r[:lb], r[:ub]]
+    end
+
+    # Polynomial
+    poly_lb = df_to_coordinates(results, :degree, 2; tol = Inf)
+    for coordinate_idx in 1:length(poly_lb)
+        push!(curves, Dict(
+            "opts" => "+[forget plot]",
+            "coordinates" => poly_lb[coordinate_idx]
+        ))
+    end
+    poly_ub = df_to_coordinates(results, :degree, 3; tol = Inf)
+    for coordinate_idx in 1:length(poly_ub)
+        push!(curves, Dict(
+            "opts" => "",
+            "coordinates" => poly_ub[coordinate_idx],
+            "shift" => -1
+        ))
+    end
+
+    # Nonparametric
+    np_lb = df_to_coordinates(results, :degree, 4; tol = Inf)
+    for coordinate_idx in 1:length(np_lb)
+        push!(curves, Dict(
+            "opts" => "+[dashed, forget plot]",
+            "coordinates" => np_lb[coordinate_idx]
+        ))
+    end
+    np_ub = df_to_coordinates(results, :degree, 5; tol = Inf)
+    for coordinate_idx in 1:length(np_ub)
+        push!(curves, Dict(
+            "opts" => "+[dashed]",
+            "coordinates" => np_ub[coordinate_idx]
+        ))
+    end
+
+    # Polynomial, Decreasing
+    poly_lb_decr = df_to_coordinates(results, :degree, 6; tol = Inf)
+    for coordinate_idx in 1:length(poly_lb_decr)
+        push!(curves, Dict(
+            "opts" => "+[forget plot]",
+            "coordinates" => poly_lb_decr[coordinate_idx]
+        ))
+    end
+    poly_ub_decr = df_to_coordinates(results, :degree, 7; tol = Inf)
+    for coordinate_idx in 1:length(poly_ub_decr)
+        push!(curves, Dict(
+            "opts" => "",
+            "coordinates" => poly_ub_decr[coordinate_idx],
+            "shift" => -2
+        ))
+    end
+
+    # Nonparametric, Decreasing
+    np_lb_decr = df_to_coordinates(results, :degree, 8; tol = Inf)
+    for coordinate_idx in 1:length(np_lb_decr)
+        push!(curves, Dict(
+            "opts" => "+[dashed, forget plot]",
+            "coordinates" => np_lb_decr[coordinate_idx]
+        ))
+    end
+    np_ub_decr = df_to_coordinates(results, :degree, 9; tol = Inf)
+    for coordinate_idx in 1:length(np_ub_decr)
+        push!(curves, Dict(
+            "opts" => "+[dashed]",
+            "coordinates" => np_ub_decr[coordinate_idx]
+        ))
+    end
+
+    # Truth
+    push!(curves, Dict(
+        "opts" => "[dotted, mark=star, forget plot]",
+        "coordinates" => join("(" .* string.(collect(1:1:19)) .* ", $ypos)")
+    ))
+
+    # create tex file
+    templatefn = joinpath(savedir, "mt2018review", "tikz-template-kbounds.tex")
+    template = Mustache.load(templatefn, ("<<", ">>"))
+    tex = render(
+        template;
+        curves = curves,
+        ypos = ypos,
+        ylabel = "ATT"
     )
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file

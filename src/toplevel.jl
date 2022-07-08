@@ -99,6 +99,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 5
             savedir, _ = setup(savelocation, stub = "k9")
             run_k9(savedir, compile)
+        elseif figure_choice == 6
+            savedir, _ = setup(savelocation, stub = "kbounds")
+            run_kbounds(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
