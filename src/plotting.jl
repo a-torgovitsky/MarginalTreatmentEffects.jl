@@ -226,8 +226,8 @@ function mtrs_and_weights(
 
     # Collect data for target parameter
     tp_weights = compute_average_weights(tp)
-    tp_d0_coord = df_to_coordinates(tp_weights, :u, 3, steps = 1/500)
-    tp_d1_coord = df_to_coordinates(tp_weights, :u, 2, steps = 1/500)
+    tp_d0_coord = df_to_coordinates(tp_weights, :u, 3, steps = 1/step)
+    tp_d1_coord = df_to_coordinates(tp_weights, :u, 2, steps = 1/step)
     push!(legend, Dict(
         "color" => colors[aesthetic_counter],
         "mark" => marks[aesthetic_counter],
