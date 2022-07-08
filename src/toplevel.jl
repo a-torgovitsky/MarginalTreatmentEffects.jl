@@ -90,6 +90,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 2
             savedir, _ = setup(savelocation, stub = "tikz-weights")
             run_tikz_weights(savedir, compile)
+        elseif figure_choice == 3
+            savedir, _ = setup(savelocation, stub = "tikz-late-extrap")
+            run_tikz_late_extrap(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
