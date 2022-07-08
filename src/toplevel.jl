@@ -87,6 +87,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         if figure_choice == 1
             savedir, _ = setup(savelocation, stub = "tikz-mtr")
             run_tikz_mtr(savedir, compile)
+        elseif figure_choice == 2
+            savedir, _ = setup(savelocation, stub = "tikz-weights")
+            run_tikz_weights(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end

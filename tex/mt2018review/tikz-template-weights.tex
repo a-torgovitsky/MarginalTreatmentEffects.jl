@@ -1,0 +1,118 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{plotmarks}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{pdflscape}
+\usepackage{fullpage}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+
+\thispagestyle{empty} % No page number so you can crop correctly
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MUSTACHE VARIABLES
+%
+% pscore
+% pscorelabel
+%
+% weights
+%   Note: this is a vector of dictionaries.
+%     Each dictionary corresponds to a particular target parameter and contains
+%     the following keys:
+%       legendtitle -- label for the legend
+%       segments -- a vector of segment-specific dictionaries with the keys:
+%         coordinates -- string of (x, y) pairs
+%         opts -- options for the plot
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \pgfplotstableread[col sep = comma]{TargetParamWeights-m1.csv}\dataWeights % TODO: remove
+
+\begin{document}
+\begin{landscape}
+\begin{center}
+
+%\large{Weights for Conventional Target Parameters ($D = 1$)}
+
+\begin{tikzpicture}
+
+\begin{axis}[
+    width=6in,
+    height=4in,
+    ymin=0,
+    ymax=6,
+    xmin=0,
+    xmax=1,
+    major tick length=.075cm,
+    xlabel={Unobserved Heterogeneity in Treatment Choice ($u$)},
+    ylabel={Average $d = 1$ Weights ($\mathbb{E}[\omega_{1}^{\star}(u,X,Z)]$)},
+    legend cell align=left,
+    mark repeat = {10},
+    cycle list name=exotic,
+    tick pos = left,
+    extra x ticks={<<:pscore>>},
+    extra x tick labels={<<:pscorelabel>>},
+    extra x tick style={
+        tick pos=right,
+        ticklabel pos=right,
+    }
+]
+
+<<#:weights>>
+  <<#segments>>
+    \addplot+[<<opts>>]
+      coordinates{
+        <<coordinates>>
+      };
+  <</segments>>
+  \addlegendentry{<<legendtitle>>}
+<</:weights>>
+
+% \BLOCK{for w in weights}
+% \BLOCK{for s in w['segments']}
+% 
+% \addplot+[
+%      restrict x to domain=\VAR{s['lb']}:\VAR{s['ub']},
+%      \BLOCK{if s['forget']}
+%      forget plot,
+%      \BLOCK{endif}
+%      \BLOCK{if s['zero']}
+%      draw=none,
+%      mark=none,
+%      \BLOCK{endif}
+% ]
+% table[
+%     x index = {0},
+%     y index = {\VAR{w['col']}}
+% ]\dataWeights;
+% 
+% \BLOCK{endfor}
+% \addlegendentry{\VAR{w['legendtext']}}
+% \BLOCK{endfor}
+
+\end{axis}
+
+\end{tikzpicture}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{center}
+\end{landscape}
+\end{document}
