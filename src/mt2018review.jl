@@ -181,7 +181,7 @@ function conventional_weights(
         ))
     end
     tp_atu = Dict(
-        "legendtitle" => "\$\\text{ATu}\$",
+        "legendtitle" => "\$\\text{ATU}\$",
         "segments" => segments
     )
     push!(weights, tp_atu)
