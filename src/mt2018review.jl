@@ -75,7 +75,7 @@ function run_tikz_late_extrap(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 4: MTRs and Weights for ATT with IV Slope and TSLS Slope
+# Figure 4: MTRs and Weights for ATT with IV Slope and TSLS Slope, 4th degree
 function run_k4(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     basis = [(bernstein_basis(4), bernstein_basis(4))]
@@ -90,6 +90,33 @@ function run_k4(savedir::String, compile::Bool = false)
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
     texfn = mtrs_and_weights(savedir, "k4";
+        dgp = dgp,
+        tp = att(dgp),
+        basis = basis,
+        assumptions = assumptions,
+        mtroption = "max",
+        opts = opts
+    )
+    if compile
+        compile_latex(texfn)
+    end
+end
+
+# Figure 5: MTRs and Weights for ATT with IV Slope and TSLS Slope, 9th degree
+function run_k9(savedir::String, compile::Bool = false)
+    dgp = dgp_review()
+    basis = [(bernstein_basis(9), bernstein_basis(9))]
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => false,
+        :ivslope => true,
+        :tslsslopeind => true
+    );
+    opts = defaults_review()
+    opts[1][:title] = "Bounds"
+    opts[1][:titlesuffix] = " -- shown at upper bound"
+    texfn = mtrs_and_weights(savedir, "k9";
         dgp = dgp,
         tp = att(dgp),
         basis = basis,

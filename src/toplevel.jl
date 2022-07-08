@@ -96,6 +96,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 4
             savedir, _ = setup(savelocation, stub = "k4")
             run_k4(savedir, compile)
+        elseif figure_choice == 5
+            savedir, _ = setup(savelocation, stub = "k9")
+            run_k9(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
