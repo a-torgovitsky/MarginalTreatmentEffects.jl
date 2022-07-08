@@ -74,7 +74,7 @@ function mtr_mte(
     end
 
     # create tex file
-    templatefn = joinpath(savedir, "mt2018review", "tikz-mtr-template.tex")
+    templatefn = joinpath(savedir, "mt2018review", "tikz-template-mtr.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;

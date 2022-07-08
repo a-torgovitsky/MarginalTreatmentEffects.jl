@@ -308,7 +308,7 @@ function tikz_extrapolate(savedir::String, filename::String)
 
     # create tex file
     templatefn = joinpath(savedir, "mst2018econometrica",
-                          "tikz-extrapolate-template.tex")
+                          "tikz-template-extrapolate.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;
