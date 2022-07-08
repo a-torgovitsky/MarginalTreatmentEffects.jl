@@ -13,9 +13,7 @@ end
 # Figure 1: MTRs and MTE
 function run_tikz_mtr(savedir::String, compile::Bool = false)
     dgp = dgp_review()
-    texfn = mtr_mte(savedir, "tikz-mtr";
-        dgp = dgp
-    )
+    texfn = mtr_mte(savedir, "tikz-mtr"; dgp = dgp)
     if compile
         compile_latex(texfn)
     end
@@ -24,9 +22,7 @@ end
 # Figure 2: weights for conventional target parameters
 function run_tikz_weights(savedir::String, compile::Bool = false)
     dgp = dgp_review()
-    texfn = conventional_weights(savedir, "tikz-weights";
-        dgp = dgp
-    )
+    texfn = conventional_weights(savedir, "tikz-weights"; dgp = dgp)
     if compile
         compile_latex(texfn)
     end
@@ -34,9 +30,7 @@ end
 
 function run_tikz_late_extrap(savedir::String, compile::Bool = false)
     dgp = dgp_review()
-    texfn = late_extrap(savedir, "tikz-late-extrap";
-        dgp = dgp
-    )
+    texfn = late_extrap(savedir, "tikz-late-extrap"; dgp = dgp)
     if compile
         compile_latex(texfn)
     end
