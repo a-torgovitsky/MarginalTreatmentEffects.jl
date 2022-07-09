@@ -224,6 +224,14 @@ function run_k9_decr_add_more(savedir::String, compile::Bool = false)
     end
 end
 
+# Figure 10: Bounds on LATE⁺₂₃(α) under different information sets
+function run_late_bounds_information(savedir::String, compile::Bool = false)
+    dgp = dgp_review()
+    texfn = late_information(savedir, "late-bounds-information"; dgp = dgp)
+    if compile
+        compile_latex(texfn)
+    end
+end
 
 # Plot MTRs and MTE
 function mtr_mte(
@@ -446,7 +454,6 @@ function conventional_weights(
 end
 
 # Plot extrapolation curves
-# Useful for Figure 3, 10, and 11 of MT (2018)
 function late_extrap(
     savedir::String,
     filename::String;
@@ -481,24 +488,24 @@ function late_extrap(
     results[:, "UB: LATEᵖᵐ₂₃(α)"] .= NaN
     results[:, "LB: LATEᵖᵐ₂₃(α)"] .= NaN
     for row in 1:nrow(results)
-        lb = dgp.pscore[2] - results[row, :α]
-        ub = dgp.pscore[3]
+        lb = u₂ - results[row, :α]
+        ub = u₃
         if (0 < lb < 1) & (0 < ub < 1)
             tp = late(dgp, lb, ub)
             r = compute_bounds(tp, basis, assumptions, dgp)
             results[row, 2] = r[:ub]
             results[row, 3] = r[:lb]
         end
-        lb = dgp.pscore[2]
-        ub = dgp.pscore[3] + results[row, :α]
+        lb = u₂
+        ub = u₃ + results[row, :α]
         if (0 < lb < 1) & (0 < ub < 1)
             tp = late(dgp, lb, ub)
             r = compute_bounds(tp, basis, assumptions, dgp)
             results[row, 4] = r[:ub]
             results[row, 5] = r[:lb]
         end
-        lb = dgp.pscore[2] - results[row, :α] / 2
-        ub = dgp.pscore[3] + results[row, :α] / 2
+        lb = u₂ - results[row, :α] / 2
+        ub = u₃ + results[row, :α] / 2
         # TODO: do I need the conditional if I ensure α is in the right range?
         if (0 < lb < 1) & (0 < ub < 1)
             tp = late(dgp, lb, ub)
@@ -581,6 +588,190 @@ function late_extrap(
         "label" => "\$\\text{LATE}_{2 \\rightarrow 4}\$"
     )
     push!(topticks, late₂₄)
+
+    # xpos and xlabel
+    xpos = Vector()
+    xlabel = Vector()
+    for tick in topticks
+        push!(xpos, tick["xpos"])
+        push!(xlabel, tick["xlabel"])
+    end
+    xpos = join(xpos, ",")
+    xlabel = join(xlabel, ",")
+
+    # create tex file
+    templatefn = joinpath(savedir, "mt2018review",
+                          "tikz-template-late-bounds.tex")
+    template = Mustache.load(templatefn, ("<<", ">>"))
+    tex = render(
+        template;
+        topticks = topticks,
+        curves = curves,
+        xpos = xpos,
+        xlabel = xlabel
+    )
+    texfn = joinpath(dirname(templatefn), filename * ".tex")
+    open(texfn, "w") do file
+        write(file, tex)
+    end
+    return texfn
+end
+
+# Plot LATE bounds under different information
+function late_information(
+    savedir::String,
+    filename::String;
+    dgp::DGP
+)
+    # initialize
+    topticks = Vector{Dict}()
+    curves = Vector{Dict}()
+
+    # setup
+    u₁ = dgp.pscore[findall(dgp.suppZ .== 1)][1]
+    u₂ = dgp.pscore[findall(dgp.suppZ .== 2)][1]
+    u₃ = dgp.pscore[findall(dgp.suppZ .== 3)][1]
+    u₄ = dgp.pscore[findall(dgp.suppZ .== 4)][1]
+    basis = [(bernstein_basis(9), bernstein_basis(9))]
+    first = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => false,
+        :ivslope => true,
+        :tslsslopeind => true,
+        :decreasing_level => [(1, 0), (1, 1)]
+    )
+    second = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => false,
+        :ivslope => true,
+        :tslsslopeind => true,
+        :wald => [(2, 4)],
+        :olsslope => true,
+        :decreasing_level => [(1, 0), (1, 1)]
+    )
+    sharp = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => true,
+        :decreasing_level => [(1, 0), (1, 1)]
+    )
+
+    # get data
+    α = collect(0:0.01:0.52)
+    push!(α, u₄ - u₃)
+    sort!(unique!(α))
+    results = DataFrame(α = α)
+    results[:, "UB: LATE⁺₂₃(α) First 𝒮"] .= NaN
+    results[:, "LB: LATE⁺₂₃(α) First 𝒮"] .= NaN
+    results[:, "UB: LATE⁺₂₃(α) Second 𝒮"] .= NaN
+    results[:, "LB: LATE⁺₂₃(α) Second 𝒮"] .= NaN
+    results[:, "UB: LATE⁺₂₃(α) Sharp 𝒮"] .= NaN
+    results[:, "LB: LATE⁺₂₃(α) Sharp 𝒮"] .= NaN
+
+    for row in 1:nrow(results)
+        lb = u₂
+        ub = u₃ + results[row, :α]
+        tp = late(dgp, lb, ub)
+        if (0 < lb < 1) & (0 < ub < 1)
+            r = compute_bounds(tp, basis, first, dgp)
+            results[row, 2] = r[:ub]
+            results[row, 3] = r[:lb]
+            r = compute_bounds(tp, basis, second, dgp)
+            results[row, 4] = r[:ub]
+            results[row, 5] = r[:lb]
+            r = compute_bounds(tp, basis, sharp, dgp)
+            results[row, 6] = r[:ub]
+            results[row, 7] = r[:lb]
+        end
+    end
+
+    # sharp information set
+    segments = Vector{Dict}()
+    non_nan = findall(.!isnan.(results[:, 6]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 6; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => "forget plot",
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    non_nan = findall(.!isnan.(results[:, 7]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 7; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    push!(curves, Dict(
+        "segments" => segments,
+        "legendtitle" => "Sharp information set"
+    ))
+
+    # second information set
+    segments = Vector{Dict}()
+    non_nan = findall(.!isnan.(results[:, 4]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 4; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => "forget plot",
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    non_nan = findall(.!isnan.(results[:, 5]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 5; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    push!(curves, Dict(
+        "segments" => segments,
+        "legendtitle" => "Second information set"
+    ))
+
+    # first information set
+    segments = Vector{Dict}()
+    non_nan = findall(.!isnan.(results[:, 2]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 2; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => "forget plot",
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    non_nan = findall(.!isnan.(results[:, 3]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 3; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    push!(curves, Dict(
+        "segments" => segments,
+        "legendtitle" => "First information set"
+    ))
+
+    # top ticks
+    push!(topticks, Dict(
+        "xpos" => round(u₄ - u₃, digits = 2),
+        "ypos" => round(results[findall(results[:,:α] .== u₄ - u₃), 5][1], digits = 5),
+        "xlabel" => "\$p(4) - p(3)\$",
+        "nodelabel" => "late24",
+        "xlabelpos" => 0.15,
+        "ylabelpos" => -0.1,
+        "label" => "\$\\text{LATE}_{2 \\rightarrow 4}\$"
+    ))
 
     # xpos and xlabel
     xpos = Vector()
