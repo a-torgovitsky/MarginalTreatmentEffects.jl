@@ -233,6 +233,15 @@ function run_late_bounds_information(savedir::String, compile::Bool = false)
     end
 end
 
+# Figure 11: Bounds on LATE⁺₂₃(α) under different assumptions
+function run_late_bounds_assumptions(savedir::String, compile::Bool = false)
+    dgp = dgp_review()
+    texfn = late_assumptions(savedir, "late-bounds-assumptions"; dgp = dgp)
+    if compile
+        compile_latex(texfn)
+    end
+end
+
 # Plot MTRs and MTE
 function mtr_mte(
     savedir::String,
@@ -771,6 +780,174 @@ function late_information(
         "xlabelpos" => 0.15,
         "ylabelpos" => -0.1,
         "label" => "\$\\text{LATE}_{2 \\rightarrow 4}\$"
+    ))
+
+    # xpos and xlabel
+    xpos = Vector()
+    xlabel = Vector()
+    for tick in topticks
+        push!(xpos, tick["xpos"])
+        push!(xlabel, tick["xlabel"])
+    end
+    xpos = join(xpos, ",")
+    xlabel = join(xlabel, ",")
+
+    # create tex file
+    templatefn = joinpath(savedir, "mt2018review",
+                          "tikz-template-late-bounds.tex")
+    template = Mustache.load(templatefn, ("<<", ">>"))
+    tex = render(
+        template;
+        topticks = topticks,
+        curves = curves,
+        xpos = xpos,
+        xlabel = xlabel
+    )
+    texfn = joinpath(dirname(templatefn), filename * ".tex")
+    open(texfn, "w") do file
+        write(file, tex)
+    end
+    return texfn
+end
+
+# Plot LATE bounds under different assumptions
+function late_assumptions(
+    savedir::String,
+    filename::String;
+    dgp::DGP
+)
+    # initialize
+    topticks = Vector{Dict}()
+    curves = Vector{Dict}()
+
+    # setup
+    u₁ = dgp.pscore[findall(dgp.suppZ .== 1)][1]
+    u₂ = dgp.pscore[findall(dgp.suppZ .== 2)][1]
+    u₃ = dgp.pscore[findall(dgp.suppZ .== 3)][1]
+    u₄ = dgp.pscore[findall(dgp.suppZ .== 4)][1]
+
+    nondecr = Dict{Symbol, Any}(:lb => 0, :ub => 1, :saturated => true)
+    decr = copy(nondecr)
+    decr[:decreasing_level] = [(1, 0), (1, 1)]
+
+    k9 = [(bernstein_basis(9), bernstein_basis(9))]
+
+    # get data
+    α = collect(0:0.01:0.52)
+    push!(α, u₄ - u₃)
+    sort!(unique!(α))
+    results = DataFrame(α = α)
+    results[:, "UB: NP"] .= NaN
+    results[:, "LB: NP"] .= NaN
+    results[:, "UB: NP, decr"] .= NaN
+    results[:, "LB: NP, decr"] .= NaN
+    results[:, "UB: K = 9, decr"] .= NaN
+    results[:, "LB: K = 9, decr"] .= NaN
+
+    for row in 1:nrow(results)
+        lower = u₂
+        upper = u₃ + results[row, :α]
+        tp = late(dgp, lower, upper)
+        if (0 < lower < 1) & (0 < upper < 1)
+            knots = vcat(0, 1, dgp.pscore, lower, upper)
+            np = [(constantspline_basis(knots), constantspline_basis(knots))]
+            r = compute_bounds(tp, np, nondecr, dgp)
+            results[row, 2] = r[:ub]
+            results[row, 3] = r[:lb]
+            r = compute_bounds(tp, np, decr, dgp)
+            results[row, 4] = r[:ub]
+            results[row, 5] = r[:lb]
+            r = compute_bounds(tp, k9, decr, dgp)
+            results[row, 6] = r[:ub]
+            results[row, 7] = r[:lb]
+        end
+    end
+
+    # nonparametric
+    segments = Vector{Dict}()
+    non_nan = findall(.!isnan.(results[:, 2]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 2; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => "forget plot",
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    non_nan = findall(.!isnan.(results[:, 3]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 3; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    push!(curves, Dict(
+        "segments" => segments,
+        "legendtitle" => "Nonparametric"
+    ))
+
+    # nonparametric, decreasing
+    segments = Vector{Dict}()
+    non_nan = findall(.!isnan.(results[:, 4]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 4; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => "forget plot",
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    non_nan = findall(.!isnan.(results[:, 5]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 5; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    push!(curves, Dict(
+        "segments" => segments,
+        "legendtitle" => "Nonparametric, decreasing"
+    ))
+
+    # 9th degree, decreasing
+    segments = Vector{Dict}()
+    non_nan = findall(.!isnan.(results[:, 6]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 6; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => "forget plot",
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    non_nan = findall(.!isnan.(results[:, 7]))
+    coordinates = df_to_coordinates(results[non_nan, :], :α, 7; tol = Inf)
+    for coordinate_idx in 1:length(coordinates)
+        segment = Dict(
+            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
+            "coordinates" => coordinates[coordinate_idx]
+        )
+        push!(segments, segment)
+    end
+    push!(curves, Dict(
+        "segments" => segments,
+        "legendtitle" => "Ninth-degree polynomial, decreasing"
+    ))
+
+    # top ticks
+    push!(topticks, Dict(
+        "xpos" => round(u₄ - u₃, digits = 2),
+        "ypos" => round(results[findall(results[:,:α] .== u₄ - u₃), 5][1], digits = 5),
+        "xlabel" => "\$p(4) - p(3)\$",
+        "nodelabel" => "late24",
+        "xlabelpos" => 0.15,
+        "ylabelpos" => 0.05,
+        "label" => "\$\\text{LATE}_{2 \\rightarrow 4}\$",
+        "bendopts" => "[bend left=10]"
     ))
 
     # xpos and xlabel

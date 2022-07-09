@@ -25,6 +25,7 @@
 %   xlabelpos -- x-coordinate of label
 %   ylabelpos -- y-coordinate of label
 %   label -- label text
+%   bendopts -- bend options for arrow
 %
 % curves: vector of tp-specific dictionaries containing:
 %   segments -- vector of dictionaries containing:
@@ -91,7 +92,7 @@
   \node[anchor = west]
   (<<nodelabel>>label) at (<<xlabelpos>>,<<ylabelpos>>){<<label>>};
   \node (<<nodelabel>>) at (axis cs:<<xpos>>,<<ypos>>){};
-  \draw[->, thick] (<<nodelabel>>label)--(<<nodelabel>>);
+  \draw[->, thick] (<<nodelabel>>label) to <<bendopts>> (<<nodelabel>>);
   \draw[dotted, thin]
       ({axis cs:<<xpos>>,0} |- {rel axis cs:0,0})
   --  ({axis cs:<<xpos>>,0} |- {rel axis cs:0,1});

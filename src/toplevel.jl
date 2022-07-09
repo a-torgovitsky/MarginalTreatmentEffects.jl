@@ -114,6 +114,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 10
             savedir, _ = setup(savelocation, stub = "late-bounds-information")
             run_late_bounds_information(savedir, compile)
+        elseif figure_choice == 11
+            savedir, _ = setup(savelocation, stub = "late-bounds-assumptions")
+            run_late_bounds_assumptions(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
