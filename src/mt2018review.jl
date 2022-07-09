@@ -138,6 +138,34 @@ function run_kbounds(savedir::String, compile::Bool = false)
     end
 end
 
+# Figure 7: Nonparametric Bounds on ATT
+function run_np(savedir::String, compile::Bool = false)
+    dgp = dgp_review()
+    knots = vcat(0, 1, dgp.pscore)
+    basis = [(constantspline_basis(knots), constantspline_basis(knots))];
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => false,
+        :ivslope => true,
+        :tslsslopeind => true
+    )
+    opts = defaults_review()
+    opts[1][:title] = "Bounds"
+    opts[1][:titlesuffix] = " -- shown at upper bound"
+    texfn = mtrs_and_weights(savedir, "np";
+        dgp = dgp,
+        tp = att(dgp),
+        basis = basis,
+        assumptions = assumptions,
+        mtroption = "max",
+        opts = opts
+    )
+    if compile
+        compile_latex(texfn)
+    end
+end
+
 # Plot MTRs and MTE
 function mtr_mte(
     savedir::String,
@@ -376,7 +404,7 @@ function late_extrap(
     u₄ = dgp.pscore[findall(dgp.suppZ .== 4)][1]
     
     assumptions = Dict{Symbol, Any}(:lb => 0, :ub => 1, :saturated => true)
-    bases = [(bernstein_basis(2), bernstein_basis(2))]
+    basis = [(bernstein_basis(2), bernstein_basis(2))]
 
     # get data
     α = collect(0:0.01:0.58)
@@ -398,7 +426,7 @@ function late_extrap(
         ub = dgp.pscore[3]
         if (0 < lb < 1) & (0 < ub < 1)
             tp = late(dgp, lb, ub)
-            r = compute_bounds(tp, bases, assumptions, dgp)
+            r = compute_bounds(tp, basis, assumptions, dgp)
             results[row, 2] = r[:ub]
             results[row, 3] = r[:lb]
         end
@@ -406,7 +434,7 @@ function late_extrap(
         ub = dgp.pscore[3] + results[row, :α]
         if (0 < lb < 1) & (0 < ub < 1)
             tp = late(dgp, lb, ub)
-            r = compute_bounds(tp, bases, assumptions, dgp)
+            r = compute_bounds(tp, basis, assumptions, dgp)
             results[row, 4] = r[:ub]
             results[row, 5] = r[:lb]
         end
@@ -415,7 +443,7 @@ function late_extrap(
         # TODO: do I need the conditional if I ensure α is in the right range?
         if (0 < lb < 1) & (0 < ub < 1)
             tp = late(dgp, lb, ub)
-            r = compute_bounds(tp, bases, assumptions, dgp)
+            r = compute_bounds(tp, basis, assumptions, dgp)
             results[row, 6] = r[:ub]
             results[row, 7] = r[:lb]
         end
@@ -565,19 +593,19 @@ function kbounds(
     results[:, "LB Nonparametric, Decreasing"] .= NaN
     results[:, "UB Nonparametric, Decreasing"] .= NaN
     for row in 1:nrow(results)
-        bases = [(bernstein_basis(results[row, :degree]),
+        basis = [(bernstein_basis(results[row, :degree]),
                   bernstein_basis(results[row, :degree]))]
-        r = compute_bounds(tp, bases, nondecr, dgp)
+        r = compute_bounds(tp, basis, nondecr, dgp)
         results[row, 2:3] = [r[:lb], r[:ub]]
-        r = compute_bounds(tp, bases, decr, dgp)
+        r = compute_bounds(tp, basis, decr, dgp)
         results[row, 6:7] = [r[:lb], r[:ub]]
 
         knots = vcat(0, 1, dgp.pscore)
-        bases = [(constantspline_basis(knots),
+        basis = [(constantspline_basis(knots),
                   constantspline_basis(knots))]
-        r = compute_bounds(tp, bases, nondecr, dgp)
+        r = compute_bounds(tp, basis, nondecr, dgp)
         results[row, 4:5] = [r[:lb], r[:ub]]
-        r = compute_bounds(tp, bases, decr, dgp)
+        r = compute_bounds(tp, basis, decr, dgp)
         results[row, 8:9] = [r[:lb], r[:ub]]
     end
 
