@@ -108,6 +108,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 8
             savedir, _ = setup(savelocation, stub = "k9-decr")
             run_k9_decr(savedir, compile)
+        elseif figure_choice == 9
+            savedir, _ = setup(savelocation, stub = "k9-decr-add-more")
+            run_k9_decr_add_more(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
