@@ -117,6 +117,20 @@ function menu(savelocation::String = "."; compile::Bool = false)
         elseif figure_choice == 11
             savedir, _ = setup(savelocation, stub = "late-bounds-assumptions")
             run_late_bounds_assumptions(savedir, compile)
+        elseif figure_choice == 0
+            savedir, _ = setup(savelocation, stub = "everything")
+            run_tikz_mtr(savedir, compile)
+            run_tikz_weights(savedir, compile)
+            run_tikz_late_extrap(savedir, compile)
+            run_k4(savedir, compile)
+            run_k9(savedir, compile)
+            run_k9(savedir, compile)
+            run_kbounds(savedir, compile)
+            run_np(savedir, compile)
+            run_k9_decr(savedir, compile)
+            run_k9_decr_add_more(savedir, compile)
+            run_late_bounds_information(savedir, compile)
+            run_late_bounds_assumptions(savedir, compile)
         else
             @error "WIP" project_choice figure_choice
         end
