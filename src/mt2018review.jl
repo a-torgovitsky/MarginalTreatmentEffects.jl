@@ -166,6 +166,34 @@ function run_np(savedir::String, compile::Bool = false)
     end
 end
 
+# Figure 8: 9th-degree, decreasing polynomial bounds on ATT
+function run_k9_decr(savedir::String, compile::Bool = false)
+    dgp = dgp_review()
+    basis = [(bernstein_basis(9), bernstein_basis(9))]
+    assumptions = Dict{Symbol, Any}(
+        :lb => 0,
+        :ub => 1,
+        :saturated => false,
+        :ivslope => true,
+        :tslsslopeind => true,
+        :decreasing_level => [(1, 0), (1, 1)]
+    );
+    opts = defaults_review()
+    opts[1][:title] = "Bounds"
+    opts[1][:titlesuffix] = " -- shown at upper bound"
+    texfn = mtrs_and_weights(savedir, "k9-decr";
+        dgp = dgp,
+        tp = att(dgp),
+        basis = basis,
+        assumptions = assumptions,
+        mtroption = "max",
+        opts = opts
+    )
+    if compile
+        compile_latex(texfn)
+    end
+end
+
 # Plot MTRs and MTE
 function mtr_mte(
     savedir::String,
