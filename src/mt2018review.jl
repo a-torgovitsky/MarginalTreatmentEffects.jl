@@ -617,7 +617,8 @@ function late_extrap(
         topticks = topticks,
         curves = curves,
         xpos = xpos,
-        xlabel = xlabel
+        xlabel = xlabel,
+        cycleshift = 0
     )
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
@@ -801,7 +802,8 @@ function late_information(
         topticks = topticks,
         curves = curves,
         xpos = xpos,
-        xlabel = xlabel
+        xlabel = xlabel,
+        cycleshift = 2
     )
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
@@ -969,7 +971,8 @@ function late_assumptions(
         topticks = topticks,
         curves = curves,
         xpos = xpos,
-        xlabel = xlabel
+        xlabel = xlabel,
+        cycleshift = 0
     )
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file

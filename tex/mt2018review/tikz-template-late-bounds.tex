@@ -35,6 +35,7 @@
 %
 % xpos -- comma-separated string of `xpos` values
 % xlabel -- comma-separated string of `xlabel` values
+% cycleshift -- number that shifts the aesthetics
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -76,6 +77,8 @@
         ticklabel pos=right,
     }
 ]
+
+\pgfplotsset{cycle list shift=<<:cycleshift>>}
 
 <<#:curves>>
   <<#segments>>
