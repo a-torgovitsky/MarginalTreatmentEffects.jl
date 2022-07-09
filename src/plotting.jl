@@ -177,7 +177,8 @@ function mtrs_and_weights(
     basis::Vector{Tuple{MTRBasis, MTRBasis}},
     assumptions::Dict,
     mtroption::String,
-    opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}, Vector{String}}
+    opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}, Vector{String}},
+    attributes::Dict = Dict("LogLevel" => 0),
 )
     # initialize
     settings, colors, marks, marksize, linetype = opts # aesthetic information
@@ -189,7 +190,7 @@ function mtrs_and_weights(
     aesthetic_counter = 1 # keeps track of colors, marks, and marksize
 
     # compute bounds
-    result = compute_bounds(tp, basis, assumptions, dgp)
+    result = compute_bounds(tp, basis, assumptions, dgp, attributes)
 
     # Collect data for MTRs
     if mtroption == "truth"
