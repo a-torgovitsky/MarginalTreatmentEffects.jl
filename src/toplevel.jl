@@ -137,22 +137,3 @@ function menu(savelocation::String = "."; compile::Bool = false)
     end
 end
 export menu
-
-# Q: move to src/utils.jl?
-function compile_latex(fn::String)
-    oldwd = pwd()
-    try
-        cd(dirname(fn))
-        cstr = `pdflatex -halt-on-error $(basename(fn)) "|" grep -a3 ^!`
-        @suppress begin
-            run(cstr)
-            run(cstr) # Q: need to run twice to get references correct
-            # Q: why not use latexmk to compile pdf?
-            # i.e. run(`latexmk -pdf $(basename(fn))`)
-            run(`latexmk -c`)
-        end
-        cd(oldwd)
-    catch err
-        cd(oldwd)
-    end
-end
