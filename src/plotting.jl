@@ -83,7 +83,7 @@ function legendtitle(ivlike::IVLike)
     if occursin("IV Slope for 𝟙(Z == z) for z ∈", ivlike.name)
         title = Vector{String}()
         for z in ivlike.params[:support]
-            push!(title, "\$\\mathbb{1}[Z = $z]\$")
+            push!(title, "IV Slope \$(\\mathbb{1}[Z = $z])\$")
         end
     end
     if occursin("TSLS Slope for 𝟙(Z == z) for z ∈", ivlike.name)
