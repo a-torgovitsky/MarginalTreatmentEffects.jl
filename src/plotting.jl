@@ -140,6 +140,7 @@ function parse_bounds(result)
 end
 
 
+# TODO: update documentation
 """
     mtrs_and_weights(
         savedir::String,
@@ -179,6 +180,13 @@ function mtrs_and_weights(
     mtroption::String,
     opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}, Vector{String}},
     attributes::Dict = Dict("LogLevel" => 0),
+    startdf::DataFrame= DataFrame(
+        ℓ = Int64[],
+        d = Int64[],
+        j = Int64[],
+        k = Int64[],
+        start = Float64[]
+    )
 )
     # initialize
     settings, colors, marks, marksize, linetype = opts # aesthetic information
@@ -190,7 +198,14 @@ function mtrs_and_weights(
     aesthetic_counter = 1 # keeps track of colors, marks, and marksize
 
     # compute bounds
-    result = compute_bounds(tp, basis, assumptions, dgp, attributes)
+    result = compute_bounds(
+        tp,
+        basis,
+        assumptions,
+        dgp,
+        attributes,
+        startdf
+    )
 
     # Collect data for MTRs
     if mtroption == "truth"

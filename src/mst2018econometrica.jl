@@ -229,7 +229,6 @@ function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
     )
     opts = defaults_econometrica()
     # BUG: Order is 10, but degree is 9!
-    # NOTE: in appendix, K refers to degree, not order
     opts[1][:title] = "Order 9 polynomial bounds, MTRs decreasing"
     texfn = mtrs_and_weights(savedir, "np-sharp-decr-k9";
         dgp = dgp,
