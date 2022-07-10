@@ -186,7 +186,15 @@ function mtrs_and_weights(
         j = Int64[],
         k = Int64[],
         start = Float64[]
-    )
+    ),
+    fixdf::DataFrame= DataFrame(
+        ℓ = Int64[],
+        d = Int64[],
+        j = Int64[],
+        k = Int64[],
+        fix = Float64[]
+    ),
+    return_bounds::Bool = false
 )
     # initialize
     settings, colors, marks, marksize, linetype = opts # aesthetic information
@@ -204,7 +212,8 @@ function mtrs_and_weights(
         assumptions,
         dgp,
         attributes,
-        startdf
+        startdf,
+        fixdf
     )
 
     # Collect data for MTRs
@@ -620,5 +629,9 @@ function mtrs_and_weights(
     open(texfn, "w") do file
         write(file, tex)
     end
-    return texfn
+    if return_bounds
+        return texfn, result[:lb], result[:ub]
+    else
+        return texfn
+    end
 end
