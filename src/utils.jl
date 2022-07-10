@@ -1,6 +1,7 @@
+# Create the name of the directory where reproductions will be stored.
 function make_dirname(savelocation::String;
-                      stub::String="unnamed",
-                      tag::String="")
+                      stub::String = "unnamed",
+                      tag::String = "")
     println("Saving in: $savelocation")
     if isempty(tag)
         print("Enter a directory tag "*
@@ -20,6 +21,7 @@ function make_dirname(savelocation::String;
     return pathstr
 end
 
+# Create self-contained directory where the reproductions will be stored.
 function make_dir(pathstr::String)
     if isdir(pathstr)
         @info "Directory already exists, so not copying source files."
@@ -60,6 +62,7 @@ function make_dir(pathstr::String)
     return resultsdir, already_existed
 end
 
+# Set up directory for reproduction
 function setup(savelocation::String;
                stub::String="unnamed",
                tag::String="")
@@ -68,6 +71,7 @@ function setup(savelocation::String;
     return resultsdir, already_existed
 end
 
+# Compile tex files
 function compile_latex(fn::String)
     oldwd = pwd()
     try
@@ -75,8 +79,8 @@ function compile_latex(fn::String)
         cstr = `pdflatex -halt-on-error $(basename(fn)) "|" grep -a3 ^!`
         @suppress begin
             run(cstr)
-            run(cstr) # Q: need to run twice to get references correct
-            # Q: why not use latexmk to compile pdf?
+            run(cstr) # NOTE: need to run twice to get references correct
+            # Q(a-torgovitsky): why not use latexmk to compile pdf?
             # i.e. run(`latexmk -pdf $(basename(fn))`)
             run(`latexmk -c`)
         end
