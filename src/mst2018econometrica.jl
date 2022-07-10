@@ -144,9 +144,30 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
         :saturated => false,
         :ivslopeind => [2, 3],
     )
+
+    # The MTRs that achieve the upper and lower bounds on the target parameter
+    # need not be unique. As a result, the plot of the maximizing MTRs may be
+    # different when running the code with different solvers or on different
+    # machines.
+    # In this example, Figure 4 in MST (2018) shows a maximizing MTR for d = 1
+    # that takes on the value of 0 on the interval [0, 0.35).
+    # However, this is not the only MTR that achieves the upper bound of
+    # LATE(0.35, 0.90).
+    # In particular, there are no nontrivial weights on this interval, meaning
+    # the maximizing MTR can take on any value on this interval without
+    # affecting the bounds.
+    # Running the same code with a different solver or different machine may
+    # result in a different maximizing MTR.
+    # Therefore, I produce two versions of the plot.
+    # The first version solves the programs without any intervention.
+    # The second version adds a constraint to the programs to ensure the
+    # maximizing MTR for d = 1 on [0, 0.35) takes on the value of 1.
+    # This ensures that the second version matches the original Figure 4.
+
+    # version 1: no additional constraints
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
-    texfn = mtrs_and_weights(savedir, "np-ivnps";
+    texfn, v1lb, v1ub = mtrs_and_weights(savedir, "np-ivnps-v1";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
         basis = basis,
@@ -156,11 +177,38 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
         attributes = Dict(
             "LogLevel" => 0,
             "SolveType" => 1
-        )
+        ),
+        return_bounds = true
     )
     if compile
         compile_latex(texfn)
     end
+
+    # version 2: add constraint to match original Figure 4
+    opts = defaults_econometrica()
+    opts[1][:title] = "Nonparametric bounds"
+    fixdf = DataFrame(ℓ = 1, d = 1, j = 1, k = 1, fix = 1.0)
+    texfn, v2lb, v2ub = mtrs_and_weights(savedir, "np-ivnps-v2";
+        dgp = dgp,
+        tp = late(dgp, 0.35, 0.9),
+        basis = basis,
+        assumptions = assumptions,
+        mtroption = "max",
+        opts = opts,
+        attributes = Dict(
+            "LogLevel" => 0,
+            "SolveType" => 1
+        ),
+        fixdf = fixdf,
+        return_bounds = true
+    )
+    if compile
+        compile_latex(texfn)
+    end
+
+    # The two versions produce the same upper and lower bounds
+    @assert v1lb == v2lb
+    @assert v1ub == v2ub
 end
 
 # Figure 5: maximizing MTRs for sharp LATE(0.35, 0.90) bounds
