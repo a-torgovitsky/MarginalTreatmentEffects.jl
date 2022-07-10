@@ -561,8 +561,7 @@ function tikz_extrapolate(savedir::String, filename::String)
     end
 
     # create tex file
-    templatefn = joinpath(savedir, "mst2018econometrica",
-                          "tikz-template-extrapolate.tex")
+    templatefn = joinpath(savedir, project, "tikz-template-extrapolate.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;
@@ -619,7 +618,7 @@ function mtr_mte(
     end
 
     # create tex file
-    templatefn = joinpath(savedir, "mt2018review", "tikz-template-mtr.tex")
+    templatefn = joinpath(savedir, project, "tikz-template-mtr.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;
@@ -782,7 +781,7 @@ function conventional_weights(
     push!(weights, tp_late₃₄)
 
     # create tex file
-    templatefn = joinpath(savedir, "mt2018review", "tikz-template-weights.tex")
+    templatefn = joinpath(savedir, project, "tikz-template-weights.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;
@@ -944,8 +943,7 @@ function late_extrap(
     xlabel = join(xlabel, ",")
 
     # create tex file
-    templatefn = joinpath(savedir, "mt2018review",
-                          "tikz-template-late-bounds.tex")
+    templatefn = joinpath(savedir, project, "tikz-template-late-bounds.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;
@@ -1129,8 +1127,7 @@ function late_information(
     xlabel = join(xlabel, ",")
 
     # create tex file
-    templatefn = joinpath(savedir, "mt2018review",
-                          "tikz-template-late-bounds.tex")
+    templatefn = joinpath(savedir, project, "tikz-template-late-bounds.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;
@@ -1298,8 +1295,7 @@ function late_assumptions(
     xlabel = join(xlabel, ",")
 
     # create tex file
-    templatefn = joinpath(savedir, "mt2018review",
-                          "tikz-template-late-bounds.tex")
+    templatefn = joinpath(savedir, project, "tikz-template-late-bounds.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;
@@ -1447,7 +1443,7 @@ function kbounds(
     ))
 
     # create tex file
-    templatefn = joinpath(savedir, "mt2018review", "tikz-template-kbounds.tex")
+    templatefn = joinpath(savedir, project, "tikz-template-kbounds.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
     tex = render(
         template;
