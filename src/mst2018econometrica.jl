@@ -152,7 +152,11 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
         basis = basis,
         assumptions = assumptions,
         mtroption = "max",
-        opts = opts
+        opts = opts,
+        attributes = Dict(
+            "LogLevel" => 0,
+            "SolveType" => 1
+        )
     )
     if compile
         compile_latex(texfn)
