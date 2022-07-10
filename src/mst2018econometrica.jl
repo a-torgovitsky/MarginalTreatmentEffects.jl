@@ -46,7 +46,7 @@ function defaults_econometrica()
     return settings, colors, marks, marksize, linetype
 end
 
-# Figure 1: DGP MTRs and weights for LATE(0.35, 0.90) and IV Slope
+# DGP MTRs and Weights for LATE and IV Slope (Figure 1)
 function run_np_ivs_notitle(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
@@ -73,7 +73,7 @@ function run_np_ivs_notitle(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 2: maximizing MTRs for LATE(0.35, 0.90) with IV Slope Estimand
+# LATE Bounds w/ IV Slope (Figure 2)
 function run_np_ivs(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
@@ -104,7 +104,7 @@ function run_np_ivs(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 3: maximizing MTRs for LATE(0.35, 0.90) with IV and OLS Slope Estimand
+# LATE Bounds w/ IV & OLS Slopes (Figure 3)
 function run_np_ivs_olss(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
@@ -132,7 +132,7 @@ function run_np_ivs_olss(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 4: maximizing MTRs for LATE(0.35, 0.90) with Nonparametric IV Slope
+# LATE Bounds w/ Nonparametric IV Slopes (Figure 4)
 function run_np_ivnps(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
@@ -211,7 +211,7 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
     @assert v1ub == v2ub
 end
 
-# Figure 5: maximizing MTRs for sharp LATE(0.35, 0.90) bounds
+# Sharp LATE Bounds (Figure 5)
 function run_np_sharp(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
@@ -237,7 +237,7 @@ function run_np_sharp(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 6: maximizing, decr. MTRs for sharp LATE(0.35, 0.90) bounds
+# Sharp LATE Bounds w/ Decr. MTRs (Figure 6)
 function run_np_sharp_decr(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
@@ -264,7 +264,7 @@ function run_np_sharp_decr(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 7: maximizing, decr. 9th order MTRs for sharp LATE(0.35, 0.90) bounds
+# Sharp LATE Bounds w/ Decr., 9th degree MTRs (Figure 7)
 function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     basis = [(bernstein_basis(9),
@@ -291,7 +291,7 @@ function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 8: Bounds on LATE(0.35, ̄u)
+# Bounds on Family of PRTEs (Figure 8)
 function run_tikz_extrapolate(savedir::String, compile::Bool = false)
     texfn = tikz_extrapolate(savedir, "tikz-extrapolate")
     if compile

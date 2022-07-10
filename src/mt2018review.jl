@@ -48,7 +48,7 @@ function defaults_review()
     return settings, colors, marks, marksize, linetype
 end
 
-# Figure 1: MTRs and MTE
+# DGP MTRs and MTE (Figure 1)
 function run_tikz_mtr(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     texfn = mtr_mte(savedir, "tikz-mtr"; dgp = dgp)
@@ -57,7 +57,7 @@ function run_tikz_mtr(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 2: weights for conventional target parameters
+# Weights for Conventional Target Parameters (Figure 2)
 function run_tikz_weights(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     texfn = conventional_weights(savedir, "tikz-weights"; dgp = dgp)
@@ -66,7 +66,7 @@ function run_tikz_weights(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 3: LATE extrapolation
+# LATE Extrapolation (Figure 3)
 function run_tikz_late_extrap(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     texfn = late_extrap(savedir, "tikz-late-extrap"; dgp = dgp)
@@ -75,7 +75,7 @@ function run_tikz_late_extrap(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 4: MTRs and Weights for ATT with IV Slope and TSLS Slope, 4th degree
+# ATT Bounds w/ 4th degree MTRs (Figure 4)
 function run_k4(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     basis = [(bernstein_basis(4), bernstein_basis(4))]
@@ -102,7 +102,7 @@ function run_k4(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 5: MTRs and Weights for ATT with IV Slope and TSLS Slope, 9th degree
+# ATT Bounds w/ 9th degree MTRs (Figure 5)
 function run_k9(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     basis = [(bernstein_basis(9), bernstein_basis(9))]
@@ -129,7 +129,7 @@ function run_k9(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 6: Bounds on ATT for different polynomial degrees
+# ATT Bounds w/ Different MTR Assumptions (Figure 6)
 function run_kbounds(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     texfn = kbounds(savedir, "kbounds"; dgp = dgp)
@@ -138,7 +138,7 @@ function run_kbounds(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 7: Nonparametric Bounds on ATT
+# ATT Bounds w/ Nonparametric MTRs (Figure 7)
 function run_np(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     knots = vcat(0, 1, dgp.pscore)
@@ -170,7 +170,7 @@ function run_np(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 8: 9th-degree, decreasing polynomial bounds on ATT
+# ATT Bounds w/ Decr., 9th degree MTRs (Figure 8)
 function run_k9_decr(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     basis = [(bernstein_basis(9), bernstein_basis(9))]
@@ -198,7 +198,7 @@ function run_k9_decr(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 9: 9th-degree, decreasing polynomial bounds on ATT
+# ATT Bounds w/ more IV-like estimands (Figure 9)
 function run_k9_decr_add_more(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     basis = [(bernstein_basis(9), bernstein_basis(9))]
@@ -228,7 +228,7 @@ function run_k9_decr_add_more(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 10: Bounds on LATE⁺₂₃(α) under different information sets
+# LATE Bounds w/ Different Information Sets (Figure 10)
 function run_late_bounds_information(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     texfn = late_information(savedir, "late-bounds-information"; dgp = dgp)
@@ -237,7 +237,7 @@ function run_late_bounds_information(savedir::String, compile::Bool = false)
     end
 end
 
-# Figure 11: Bounds on LATE⁺₂₃(α) under different assumptions
+# LATE Bounds w/ Different MTR Assumptions (Figure 11)
 function run_late_bounds_assumptions(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     texfn = late_assumptions(savedir, "late-bounds-assumptions"; dgp = dgp)
