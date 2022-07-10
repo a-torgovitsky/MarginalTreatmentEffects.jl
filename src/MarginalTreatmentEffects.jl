@@ -9,7 +9,8 @@ module MarginalTreatmentEffects
 
     include("weights.jl")
     include("utils.jl")
-    include("plotting.jl")
+    include("plotting-aux.jl")
+    include("plotting-main.jl")
     include("mst2018econometrica.jl")
     include("mt2018review.jl")
     include("toplevel.jl")
