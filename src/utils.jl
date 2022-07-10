@@ -49,7 +49,12 @@ function make_dir(pathstr::String)
     texdir = joinpath(resultsdir, "../tex")
     cplist = readdir(texdir)
     for c in cplist
-        cp(joinpath(texdir, c), joinpath(resultsdir, c))
+        destination = joinpath(resultsdir, c)
+        if isdir(destination)
+            @info destination * " already exists, so not copying tex files."
+        else
+            cp(joinpath(texdir, c), destination)
+        end
     end
 
     return resultsdir, already_existed
