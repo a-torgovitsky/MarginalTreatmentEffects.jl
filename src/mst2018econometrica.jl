@@ -217,7 +217,7 @@ function run_np_sharp_decr(savedir::String, compile::Bool = false)
 end
 
 # Figure 7: maximizing, decr. 9th order MTRs for sharp LATE(0.35, 0.90) bounds
-function run_np_sharp_decr_k10(savedir::String, compile::Bool = false)
+function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     basis = [(bernstein_basis(9),
               bernstein_basis(9))];
@@ -228,8 +228,10 @@ function run_np_sharp_decr_k10(savedir::String, compile::Bool = false)
         :decreasing_level => [(1, 0), (1, 1)]
     )
     opts = defaults_econometrica()
+    # BUG: Order is 10, but degree is 9!
+    # NOTE: in appendix, K refers to degree, not order
     opts[1][:title] = "Order 9 polynomial bounds, MTRs decreasing"
-    texfn = mtrs_and_weights(savedir, "np-sharp-decr-k10";
+    texfn = mtrs_and_weights(savedir, "np-sharp-decr-k9";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
         basis = basis,

@@ -65,8 +65,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
             savedir, _ = setup(savelocation, stub = "np-sharp-decr")
             run_np_sharp_decr(savedir, compile)
         elseif figure_choice == 7
-            savedir, _ = setup(savelocation, stub = "np-sharp-decr-k10")
-            run_np_sharp_decr_k10(savedir, compile)
+            # NOTE: in appendix, K refers to degree, not order
+            savedir, _ = setup(savelocation, stub = "np-sharp-decr-k9")
+            run_np_sharp_decr_k9(savedir, compile)
         elseif figure_choice == 8
             savedir, _ = setup(savelocation, stub = "tikz-extrapolate")
             run_tikz_extrapolate(savedir, compile)
@@ -78,7 +79,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
             run_np_ivnps(savedir, compile)
             run_np_sharp(savedir, compile)
             run_np_sharp_decr(savedir, compile)
-            run_np_sharp_decr_k10(savedir, compile)
+            run_np_sharp_decr_k9(savedir, compile)
             run_tikz_extrapolate(savedir, compile)
         else
             @error "ERROR: invalid choice" project_choice figure_choice
