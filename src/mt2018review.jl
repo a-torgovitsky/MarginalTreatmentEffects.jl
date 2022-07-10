@@ -78,7 +78,7 @@ end
 # ATT Bounds w/ 4th degree MTRs (Figure 4)
 function run_k4(savedir::String, compile::Bool = false)
     dgp = dgp_review()
-    basis = [(bernstein_basis(4), bernstein_basis(4))]
+    bases = [(bernstein_basis(4), bernstein_basis(4))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
         :ub => 1,
@@ -92,7 +92,7 @@ function run_k4(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "k4";
         dgp = dgp,
         tp = att(dgp),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts
@@ -105,7 +105,7 @@ end
 # ATT Bounds w/ 9th degree MTRs (Figure 5)
 function run_k9(savedir::String, compile::Bool = false)
     dgp = dgp_review()
-    basis = [(bernstein_basis(9), bernstein_basis(9))]
+    bases = [(bernstein_basis(9), bernstein_basis(9))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
         :ub => 1,
@@ -119,7 +119,7 @@ function run_k9(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "k9";
         dgp = dgp,
         tp = att(dgp),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts
@@ -142,7 +142,7 @@ end
 function run_np(savedir::String, compile::Bool = false)
     dgp = dgp_review()
     knots = vcat(0, 1, dgp.pscore)
-    basis = [(constantspline_basis(knots), constantspline_basis(knots))];
+    bases = [(constantspline_basis(knots), constantspline_basis(knots))];
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
         :ub => 1,
@@ -156,7 +156,7 @@ function run_np(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "np";
         dgp = dgp,
         tp = att(dgp),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts,
@@ -173,7 +173,7 @@ end
 # ATT Bounds w/ Decr., 9th degree MTRs (Figure 8)
 function run_k9_decr(savedir::String, compile::Bool = false)
     dgp = dgp_review()
-    basis = [(bernstein_basis(9), bernstein_basis(9))]
+    bases = [(bernstein_basis(9), bernstein_basis(9))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
         :ub => 1,
@@ -188,7 +188,7 @@ function run_k9_decr(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "k9-decr";
         dgp = dgp,
         tp = att(dgp),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts
@@ -201,7 +201,7 @@ end
 # ATT Bounds w/ more IV-like estimands (Figure 9)
 function run_k9_decr_add_more(savedir::String, compile::Bool = false)
     dgp = dgp_review()
-    basis = [(bernstein_basis(9), bernstein_basis(9))]
+    bases = [(bernstein_basis(9), bernstein_basis(9))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
         :ub => 1,
@@ -218,7 +218,7 @@ function run_k9_decr_add_more(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "k9-decr-add-more";
         dgp = dgp,
         tp = att(dgp),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts

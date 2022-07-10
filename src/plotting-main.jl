@@ -19,7 +19,7 @@ The file path of this tex file will be returned.
 - filename: name of the tex file
 - dgp: data generating process
 - tp: target parameter
-- basis: vector of tuples, where each tuple is a pair of MTRBasis structs
+- bases: vector of tuples, where each tuple is a pair of MTRBasis structs
 - assumptions: dictionary of assumptions, including IV-like estimand
 - mtroption: either "truth", "max", or "min"
 - opts: tuple of four elements:
@@ -33,7 +33,7 @@ function mtrs_and_weights(
     filename::String;
     dgp::DGP,
     tp::TargetParameter,
-    basis::Vector{Tuple{MTRBasis, MTRBasis}},
+    bases::Vector{Tuple{MTRBasis, MTRBasis}},
     assumptions::Dict,
     mtroption::String,
     opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}, Vector{String}},
@@ -66,7 +66,7 @@ function mtrs_and_weights(
     # compute bounds
     result = compute_bounds(
         tp,
-        basis,
+        bases,
         assumptions,
         dgp,
         attributes,
@@ -509,7 +509,7 @@ The file path of this tex file will be returned.
 function tikz_extrapolate(savedir::String, filename::String)
     # setup
     dgp = dgp_econometrica()
-    basis = [(bernstein_basis(9),
+    bases = [(bernstein_basis(9),
               bernstein_basis(9))];
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
@@ -532,7 +532,7 @@ function tikz_extrapolate(savedir::String, filename::String)
     # compute results
     for u_idx in 1:nrow(results)
         tp = late(dgp, 0.35, results[u_idx, :u])
-        r = compute_bounds(tp, basis, assumptions, dgp);
+        r = compute_bounds(tp, bases, assumptions, dgp);
         results[u_idx, 2:3] = round.([r[:lb], r[:ub]], digits = 4)
         results[u_idx, 4] = round.(eval_tp(tp, [dgp.mtrs], dgp), digits = 4)
     end
@@ -814,7 +814,7 @@ function late_extrap(
     u₄ = dgp.pscore[findall(dgp.suppZ .== 4)][1]
     
     assumptions = Dict{Symbol, Any}(:lb => 0, :ub => 1, :saturated => true)
-    basis = [(bernstein_basis(2), bernstein_basis(2))]
+    bases = [(bernstein_basis(2), bernstein_basis(2))]
 
     # get data
     α = collect(0:0.01:0.58)
@@ -822,7 +822,7 @@ function late_extrap(
     push!(α, u₄ - u₃)
     sort!(unique!(α))
 
-    # Since LATE's are point-identified, we can use the basis from the DGP and
+    # Since LATE's are point-identified, we can use the bases from the DGP and
     # saturated IV-like estimands to obtain the LATE's we want.
     results = DataFrame(α = α)
     results[:, "UB: LATE⁻₂₃(α)"] .= NaN
@@ -836,7 +836,7 @@ function late_extrap(
         ub = u₃
         if (0 < lb < 1) & (0 < ub < 1)
             tp = late(dgp, lb, ub)
-            r = compute_bounds(tp, basis, assumptions, dgp)
+            r = compute_bounds(tp, bases, assumptions, dgp)
             results[row, 2] = r[:ub]
             results[row, 3] = r[:lb]
         end
@@ -844,7 +844,7 @@ function late_extrap(
         ub = u₃ + results[row, :α]
         if (0 < lb < 1) & (0 < ub < 1)
             tp = late(dgp, lb, ub)
-            r = compute_bounds(tp, basis, assumptions, dgp)
+            r = compute_bounds(tp, bases, assumptions, dgp)
             results[row, 4] = r[:ub]
             results[row, 5] = r[:lb]
         end
@@ -853,7 +853,7 @@ function late_extrap(
         # TODO: do I need the conditional if I ensure α is in the right range?
         if (0 < lb < 1) & (0 < ub < 1)
             tp = late(dgp, lb, ub)
-            r = compute_bounds(tp, basis, assumptions, dgp)
+            r = compute_bounds(tp, bases, assumptions, dgp)
             results[row, 6] = r[:ub]
             results[row, 7] = r[:lb]
         end
@@ -977,7 +977,7 @@ function late_information(
     u₂ = dgp.pscore[findall(dgp.suppZ .== 2)][1]
     u₃ = dgp.pscore[findall(dgp.suppZ .== 3)][1]
     u₄ = dgp.pscore[findall(dgp.suppZ .== 4)][1]
-    basis = [(bernstein_basis(9), bernstein_basis(9))]
+    bases = [(bernstein_basis(9), bernstein_basis(9))]
     first = Dict{Symbol, Any}(
         :lb => 0,
         :ub => 1,
@@ -1020,13 +1020,13 @@ function late_information(
         ub = u₃ + results[row, :α]
         tp = late(dgp, lb, ub)
         if (0 < lb < 1) & (0 < ub < 1)
-            r = compute_bounds(tp, basis, first, dgp)
+            r = compute_bounds(tp, bases, first, dgp)
             results[row, 2] = r[:ub]
             results[row, 3] = r[:lb]
-            r = compute_bounds(tp, basis, second, dgp)
+            r = compute_bounds(tp, bases, second, dgp)
             results[row, 4] = r[:ub]
             results[row, 5] = r[:lb]
-            r = compute_bounds(tp, basis, sharp, dgp)
+            r = compute_bounds(tp, bases, sharp, dgp)
             results[row, 6] = r[:ub]
             results[row, 7] = r[:lb]
         end
@@ -1338,13 +1338,13 @@ function kbounds(
 
     # ypos
     tp = att(dgp)
-    basis = [(bernstein_basis(2), bernstein_basis(2))]
+    bases = [(bernstein_basis(2), bernstein_basis(2))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
         :ub => 1,
         :saturated => true,
     )
-    r = compute_bounds(tp, basis, assumptions, dgp)
+    r = compute_bounds(tp, bases, assumptions, dgp)
     ypos = round(r[:lb], digits = 4)
 
     # get data
@@ -1358,19 +1358,19 @@ function kbounds(
     results[:, "LB Nonparametric, Decreasing"] .= NaN
     results[:, "UB Nonparametric, Decreasing"] .= NaN
     for row in 1:nrow(results)
-        basis = [(bernstein_basis(results[row, :degree]),
+        bases = [(bernstein_basis(results[row, :degree]),
                   bernstein_basis(results[row, :degree]))]
-        r = compute_bounds(tp, basis, nondecr, dgp)
+        r = compute_bounds(tp, bases, nondecr, dgp)
         results[row, 2:3] = [r[:lb], r[:ub]]
-        r = compute_bounds(tp, basis, decr, dgp)
+        r = compute_bounds(tp, bases, decr, dgp)
         results[row, 6:7] = [r[:lb], r[:ub]]
 
         knots = vcat(0, 1, dgp.pscore)
-        basis = [(constantspline_basis(knots),
+        bases = [(constantspline_basis(knots),
                   constantspline_basis(knots))]
-        r = compute_bounds(tp, basis, nondecr, dgp)
+        r = compute_bounds(tp, bases, nondecr, dgp)
         results[row, 4:5] = [r[:lb], r[:ub]]
-        r = compute_bounds(tp, basis, decr, dgp)
+        r = compute_bounds(tp, bases, decr, dgp)
         results[row, 8:9] = [r[:lb], r[:ub]]
     end
 

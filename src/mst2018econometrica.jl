@@ -50,7 +50,7 @@ end
 function run_np_ivs_notitle(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    basis = [(constantspline_basis(knots),
+    bases = [(constantspline_basis(knots),
               constantspline_basis(knots))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
@@ -63,7 +63,7 @@ function run_np_ivs_notitle(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "np-ivs-no-title";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "truth",
         opts = opts
@@ -77,7 +77,7 @@ end
 function run_np_ivs(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    basis = [(constantspline_basis(knots),
+    bases = [(constantspline_basis(knots),
               constantspline_basis(knots))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
@@ -90,7 +90,7 @@ function run_np_ivs(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "np-ivs";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts,
@@ -108,7 +108,7 @@ end
 function run_np_ivs_olss(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    basis = [(constantspline_basis(knots),
+    bases = [(constantspline_basis(knots),
               constantspline_basis(knots))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
@@ -122,7 +122,7 @@ function run_np_ivs_olss(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "np-ivs-olss";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts
@@ -136,7 +136,7 @@ end
 function run_np_ivnps(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    basis = [(constantspline_basis(knots),
+    bases = [(constantspline_basis(knots),
               constantspline_basis(knots))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
@@ -170,7 +170,7 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
     texfn, v1lb, v1ub = mtrs_and_weights(savedir, "np-ivnps-v1";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts,
@@ -191,7 +191,7 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
     texfn, v2lb, v2ub = mtrs_and_weights(savedir, "np-ivnps-v2";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts,
@@ -215,7 +215,7 @@ end
 function run_np_sharp(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    basis = [(constantspline_basis(knots),
+    bases = [(constantspline_basis(knots),
               constantspline_basis(knots))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
@@ -227,7 +227,7 @@ function run_np_sharp(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "np-sharp";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts
@@ -241,7 +241,7 @@ end
 function run_np_sharp_decr(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    basis = [(constantspline_basis(knots),
+    bases = [(constantspline_basis(knots),
               constantspline_basis(knots))]
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
@@ -254,7 +254,7 @@ function run_np_sharp_decr(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "np-sharp-decr";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts
@@ -267,7 +267,7 @@ end
 # Sharp LATE Bounds w/ Decr., 9th degree MTRs (Figure 7)
 function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
-    basis = [(bernstein_basis(9),
+    bases = [(bernstein_basis(9),
               bernstein_basis(9))];
     assumptions = Dict{Symbol, Any}(
         :lb => 0,
@@ -281,7 +281,7 @@ function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
     texfn = mtrs_and_weights(savedir, "np-sharp-decr-k9";
         dgp = dgp,
         tp = late(dgp, 0.35, 0.9),
-        basis = basis,
+        bases = bases,
         assumptions = assumptions,
         mtroption = "max",
         opts = opts
