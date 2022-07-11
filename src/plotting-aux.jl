@@ -126,7 +126,7 @@ function legendtitle(ivlike::IVLike)
     title = ivlike.name
     if occursin("IV Slope for 𝟙(Z == z) for z ∈", ivlike.name)
         title = Vector{String}()
-        # FIX: the original Figure 5 in MST (2018) doesn't use the support of Z.
+        # FIX: Figure 4 in MST (2018) doesn't use the support of Z.
         # Instead, it uses the indices of Z.
         # It is easier for me to use the indices of Z. If I want to correct
         # this mistake, I somehow need to pass information about the support to
@@ -140,7 +140,7 @@ function legendtitle(ivlike::IVLike)
     end
     if ivlike.name == "Saturated"
         title = Vector{String}()
-        # FIX: the original Figure 5 in MST (2018) doesn't use the support of Z.
+        # FIX: Figures 5, 6, and 7 in MST (2018) doesn't use the support of Z.
         # Instead, it uses the indices of Z.
         # It is easier for me to use the indices of Z. If I want to correct
         # this mistake, I somehow need to pass information about the support to
