@@ -17,6 +17,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MUSTACHE VARIABLES
 %
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
 % topticks: vector of dictionaries with the following keys
 %   xpos -- x-coordinate of relevant object
 %   ypos -- y-coordinate of relevant object
@@ -37,17 +43,6 @@
 % xlabel -- comma-separated string of `xlabel` values
 % cycleshift -- number that shifts the aesthetics
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
@@ -81,24 +76,24 @@
 \pgfplotsset{cycle list shift=<<:cycleshift>>}
 
 <<#:curves>>
-  <<#segments>>
-  \addplot+[<<opts>>]
-  coordinates{
-    <<coordinates>>
-  };
-  <</segments>>
-  \addlegendentry{<<legendtitle>>}
+<<#segments>>
+    \addplot+[<<opts>>]
+    coordinates{
+        <<coordinates>>
+    };
+<</segments>>
+\addlegendentry{<<legendtitle>>}
 
 <</:curves>>
 
 <<#:topticks>>
-  \node[anchor = west]
-  (<<nodelabel>>label) at (<<xlabelpos>>,<<ylabelpos>>){<<label>>};
-  \node (<<nodelabel>>) at (axis cs:<<xpos>>,<<ypos>>){};
-  \draw[->, thick] (<<nodelabel>>label) to <<bendopts>> (<<nodelabel>>);
-  \draw[dotted, thin]
-      ({axis cs:<<xpos>>,0} |- {rel axis cs:0,0})
-  --  ({axis cs:<<xpos>>,0} |- {rel axis cs:0,1});
+\node[anchor = west]
+(<<nodelabel>>label) at (<<xlabelpos>>,<<ylabelpos>>){<<label>>};
+\node (<<nodelabel>>) at (axis cs:<<xpos>>,<<ypos>>){};
+\draw[->, thick] (<<nodelabel>>label) to <<bendopts>> (<<nodelabel>>);
+\draw[dotted, thin]
+    ({axis cs:<<xpos>>,0} |- {rel axis cs:0,0})
+--  ({axis cs:<<xpos>>,0} |- {rel axis cs:0,1});
 
 <</:topticks>>
 
@@ -106,8 +101,6 @@
 
 \end{tikzpicture}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{center}
 \end{landscape}
 \end{document}

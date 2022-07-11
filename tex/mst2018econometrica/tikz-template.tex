@@ -74,6 +74,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MUSTACHE VARIABLES
 %
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
 % title
 % titlesuffix
 % titlevspace
@@ -95,12 +101,6 @@
 % legendcols
 % mtrlegendtext
 % mtrylabel
-%   Notes:
-%     The variables above are used below as placeholders.
-%     They are fenced by "<<" and ">>" instead of "{{" and "}}" because braces
-%     carry meaning in LaTeX.
-%     These variables are also the keys in a dictionary and the values in this
-%     dictionary will replace the corresponding placeholders in this template.
 %
 % m0segments
 % m1segments
@@ -115,8 +115,7 @@
 % d1weights
 %   Notes:
 %     The weights are piecewise-constant functions of u.
-%     We will draw them by specifying the endpoints of each segment.
-%     Each segment will have its own dictionary with the following keys:
+%     Each piece will have its own dictionary with the following keys:
 %       pathname
 %       color
 %       mark -- this isn't used in MT (2018)
@@ -137,17 +136,6 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \begin{document}
 \begin{landscape}
 \begin{center}
@@ -164,27 +152,29 @@
 
 %%%%% M0
 \begin{axis}[%
-width=<<:axiswidth>>,
-height=<<:axisheight>>,
-scale only axis,
-xmin=<<:xmin>>,
-xmax=<<:xmax>>,
-ymin=<<:mtrymin>>,
-ymax=<<:mtrymax>>,
-axis x line=none,
-hide y axis
+    width=<<:axiswidth>>,
+    height=<<:axisheight>>,
+    scale only axis,
+    xmin=<<:xmin>>,
+    xmax=<<:xmax>>,
+    ymin=<<:mtrymin>>,
+    ymax=<<:mtrymax>>,
+    axis x line=none,
+    hide y axis
 ]
 \addplot[name path=zero, draw=none, forget plot] {0};
 
 <<#:m0segments>>
-\addplot[name path=<<pathname>>,
-         color=black,
-         on layer={axis foreground},
-         solid,
-         line width = <<~:linewidthmtr>>]
-         coordinates{
-           <<coordinates>>
-         };
+\addplot[
+    name path=<<pathname>>,
+    color=black,
+    on layer={axis foreground},
+    solid,
+    line width = <<~:linewidthmtr>>
+]
+coordinates{
+    <<coordinates>>
+};
 \label{path-<<pathname>>}
 <</:m0segments>>
 
@@ -192,145 +182,148 @@ hide y axis
 
 %%% WEIGHTS
 \begin{axis}[
-width=<<:axiswidth>>,
-height=<<:axisheight>>,
-scale only axis,
-xmin=<<:xmin>>,
-xmax=<<:xmax>>,
-title={$d = 0$},
-xlabel={<<:xlabel>>},
-ymin=<<:weightymin>>,
-ymax=<<:weightymax>>,
-ylabel={<<:ylabelweights>>},
-y label style={at={(ticklabel* cs:<<:ylabelbuffer>>)},
-               font=\small,
-               anchor=west,
-               align=center,
-               text width=<<:ylabeltextwidth>>,
-               rotate=-90},
-axis x line*=bottom,
-axis y line*=left,
-separate axis lines,
-legend columns=<<:legendcols>>,
-legend to name=legendsave,
-legend style={
-    legend cell align=left,
-    align=left,
-    text opacity=1
-},
-every axis legend/.append style={nodes={right}}
+    width=<<:axiswidth>>,
+    height=<<:axisheight>>,
+    scale only axis,
+    xmin=<<:xmin>>,
+    xmax=<<:xmax>>,
+    title={$d = 0$},
+    xlabel={<<:xlabel>>},
+    ymin=<<:weightymin>>,
+    ymax=<<:weightymax>>,
+    ylabel={<<:ylabelweights>>},
+    y label style={
+        at={(ticklabel* cs:<<:ylabelbuffer>>)},
+        font=\small,
+        anchor=west,
+        align=center,
+        text width=<<:ylabeltextwidth>>,
+        rotate=-90
+    },
+    axis x line*=bottom,
+    axis y line*=left,
+    separate axis lines,
+    legend columns=<<:legendcols>>,
+    legend to name=legendsave,
+    legend style={
+        legend cell align=left,
+        align=left,
+        text opacity=1
+    },
+    every axis legend/.append style={nodes={right}}
 ]
 
-    % inherit properties associated with the `path-mtr01` path name, which is the
-    % path of the first segment of MTR for d = 0
-    \addlegendimage{/pgfplots/refstyle=path-mtr01}
-    \addlegendentry{<<:mtrlegendtext>>}
+% inherit properties associated with the `path-mtr01` path name, which is the
+% path of the first segment of MTR for d = 0
+\addlegendimage{/pgfplots/refstyle=path-mtr01}
+\addlegendentry{<<:mtrlegendtext>>}
 
-    <<#:d0weights>>
-      \addplot[name path=<<pathname>>,
-               forget plot,
-               color=<<color>>,
-               mark=<<mark>>,
-               mark size=<<marksize>>,
-               mark repeat=<<~:markrepeat>>,
-               mark phase=<<~:markphase>>,
-               solid,
-               line width=<<~:linewidth>>]
-               coordinates{
-                 <<coordinates>>
-               };
-      \label{path-<<pathname>>}
-    <</:d0weights>>
+<<#:d0weights>>
+\addplot[
+    name path=<<pathname>>,
+    forget plot,
+    color=<<color>>,
+    mark=<<mark>>,
+    mark size=<<marksize>>,
+    mark repeat=<<~:markrepeat>>,
+    mark phase=<<~:markphase>>,
+    solid,
+    line width=<<~:linewidth>>
+]
+coordinates{
+    <<coordinates>>
+};
+\label{path-<<pathname>>}
+<</:d0weights>>
 
-    <<#:legend>>
-      \addlegendimage{
-        solid,
-        color=<<color>>,
-        mark=<<mark>>,
-        line width=<<~:linewidth>>,
-        mark size=<<marksize>>
-      }
-      \addlegendentry{<<legendtitle>>}
-    <</:legend>>
+<<#:legend>>
+\addlegendimage{
+    solid,
+    color=<<color>>,
+    mark=<<mark>>,
+    line width=<<~:linewidth>>,
+    mark size=<<marksize>>
+}
+\addlegendentry{<<legendtitle>>}
+<</:legend>>
 
 \end{axis}
 
 \end{tikzpicture}
 \qquad
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % AXIS 2 FOR D = 1
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{tikzpicture}[font=<<:fontsize>>]
 %%%%% M1
 \begin{axis}[%
-width=<<:axiswidth>>,
-height=<<:axisheight>>,
-scale only axis,
-xmin=<<:xmin>>,
-xmax=<<:xmax>>,
-ymin=<<:mtrymin>>,
-ymax=<<:mtrymax>>,
-axis x line=none,
-axis y line*=right,
-ytick={0, .25, 0.5, .75,  1},
-ylabel={<<:mtrylabel>>},
-y label style={at={(ticklabel* cs:<<:ylabelbuffer>>)},
-               anchor=east,
-               font=\small,
-               rotate=-90}
+    width=<<:axiswidth>>,
+    height=<<:axisheight>>,
+    scale only axis,
+    xmin=<<:xmin>>,
+    xmax=<<:xmax>>,
+    ymin=<<:mtrymin>>,
+    ymax=<<:mtrymax>>,
+    axis x line=none,
+    axis y line*=right,
+    ytick={0, .25, 0.5, .75,  1},
+    ylabel={<<:mtrylabel>>},
+    y label style={
+        at={(ticklabel* cs:<<:ylabelbuffer>>)},
+        anchor=east,
+        font=\small,
+        rotate=-90
+    }
 ]
 \addplot[name path=zero, draw=none, forget plot] {0};
 
 <<#:m1segments>>
-\addplot[name path=<<pathname>>,
-         color=black,
-         on layer={axis foreground},
-         solid,
-         line width = <<~:linewidthmtr>>]
-         coordinates{
-           <<coordinates>>
-         };
+\addplot[
+    name path=<<pathname>>,
+    color=black,
+    on layer={axis foreground},
+    solid,
+    line width = <<~:linewidthmtr>>
+]
+coordinates{
+    <<coordinates>>
+};
 \label{path-<<pathname>>}
 <</:m1segments>>
-
 
 \end{axis}
 %%% WEIGHTS
 \begin{axis}[
-width=<<:axiswidth>>,
-height=<<:axisheight>>,
-scale only axis,
-xmin=<<:xmin>>,
-xmax=<<:xmax>>,
-title={$d = 1$},
-xlabel={<<:xlabel>>},
-ymin=<<:weightymin>>,
-ymax=<<:weightymax>>,
-hide y axis,
-axis x line*=bottom,
+    width=<<:axiswidth>>,
+    height=<<:axisheight>>,
+    scale only axis,
+    xmin=<<:xmin>>,
+    xmax=<<:xmax>>,
+    title={$d = 1$},
+    xlabel={<<:xlabel>>},
+    ymin=<<:weightymin>>,
+    ymax=<<:weightymax>>,
+    hide y axis,
+    axis x line*=bottom,
 ]
 
-    <<#:d1weights>>
-      \addplot[name path=<<pathname>>,
-               forget plot,
-               color=<<color>>,
-               mark=<<mark>>,
-               mark size=<<marksize>>,
-               mark repeat=<<~:markrepeat>>,
-               mark phase=<<~:markphase>>,
-               solid,
-               line width=<<~:linewidth>>]
-               coordinates{
-                 <<coordinates>>
-               };
-      \label{path-<<pathname>>}
-    <</:d1weights>>
+<<#:d1weights>>
+\addplot[
+    name path=<<pathname>>,
+    forget plot,
+    color=<<color>>,
+    mark=<<mark>>,
+    mark size=<<marksize>>,
+    mark repeat=<<~:markrepeat>>,
+    mark phase=<<~:markphase>>,
+    solid,
+    line width=<<~:linewidth>>
+]
+coordinates{
+    <<coordinates>>
+};
+\label{path-<<pathname>>}
+<</:d1weights>>
 
 \end{axis}
 
@@ -338,7 +331,6 @@ axis x line*=bottom,
 \\
 \ref{legendsave}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{center}
 \end{landscape}
 \end{document}

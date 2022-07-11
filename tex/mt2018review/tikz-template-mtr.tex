@@ -17,9 +17,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MUSTACHE VARIABLES
 %
-% m0segments - m_0(u)
-% m1segments - m_1(u)
-% mtesegments - difference between m_1(u) and m_0(u)
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
+% m0segments: m_0(u)
+% m1segments: m_1(u)
+% mtesegments: difference between m_1(u) and m_0(u)
 %   Notes:
 %     Each of these variables is a vector of dictionaries.
 %     Each dictionary has a single key called "coordinates" that contains the
@@ -27,24 +33,9 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% \pgfplotstableread[col sep = comma]{MTrue.csv}\dataM % TODO: replace with Mustache.jl
-
 \begin{document}
 \begin{landscape}
 \begin{center}
-
-%\large{MTR and MTE Functions}
 
 \begin{tikzpicture}
 
@@ -64,7 +55,6 @@
     cycle list name=exotic,
 ]
 
-% TODO: colors, tick marks?
 <<#:m0segments>>
 \addplot
 coordinates{
@@ -92,8 +82,6 @@ coordinates{
 
 \end{tikzpicture}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{center}
 \end{landscape}
 \end{document}

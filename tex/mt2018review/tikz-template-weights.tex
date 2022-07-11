@@ -17,6 +17,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MUSTACHE VARIABLES
 %
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
 % pscore
 % pscorelabel
 %
@@ -32,24 +38,9 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% \pgfplotstableread[col sep = comma]{TargetParamWeights-m1.csv}\dataWeights % TODO: remove
-
 \begin{document}
 \begin{landscape}
 \begin{center}
-
-%\large{Weights for Conventional Target Parameters ($D = 1$)}
 
 \begin{tikzpicture}
 
@@ -76,43 +67,19 @@
 ]
 
 <<#:weights>>
-  <<#segments>>
+<<#segments>>
     \addplot+[<<opts>>]
-      coordinates{
+    coordinates{
         <<coordinates>>
-      };
-  <</segments>>
-  \addlegendentry{<<legendtitle>>}
+    };
+<</segments>>
+\addlegendentry{<<legendtitle>>}
 <</:weights>>
-
-% \BLOCK{for w in weights}
-% \BLOCK{for s in w['segments']}
-% 
-% \addplot+[
-%      restrict x to domain=\VAR{s['lb']}:\VAR{s['ub']},
-%      \BLOCK{if s['forget']}
-%      forget plot,
-%      \BLOCK{endif}
-%      \BLOCK{if s['zero']}
-%      draw=none,
-%      mark=none,
-%      \BLOCK{endif}
-% ]
-% table[
-%     x index = {0},
-%     y index = {\VAR{w['col']}}
-% ]\dataWeights;
-% 
-% \BLOCK{endfor}
-% \addlegendentry{\VAR{w['legendtext']}}
-% \BLOCK{endfor}
 
 \end{axis}
 
 \end{tikzpicture}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{center}
 \end{landscape}
 \end{document}

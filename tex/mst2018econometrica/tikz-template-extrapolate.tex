@@ -18,6 +18,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MUSTACHE VARIABLES
 %
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
 % lbsegments - lower bound
 % ubsegments - upper bound
 % truesegments - actual value
@@ -26,17 +32,6 @@
 %     Each dictionary has a single key called "coordinates" that contains the
 %     segment-specific coordinates.
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\PLOTLINEWIDTH}{.9pt}
@@ -53,67 +48,73 @@
 ]
 
 \begin{axis}[%
-width=6in,
-height=4in,
-ytick distance = .025,
-ymin=-.0499,
-ymax=.1499,
-yticklabel style={
+    width=6in,
+    height=4in,
+    ytick distance = .025,
+    ymin=-.0499,
+    ymax=.1499,
+    yticklabel style={
         /pgf/number format/fixed,
         /pgf/number format/precision=3,
         /pgf/number format/skip 0.=true,
         font=\normalsize
-},
-scaled y ticks=false,
-xmin=.38,
-xmax=1,
-xtick distance=.05,
-xticklabel style={
+    },
+    scaled y ticks=false,
+    xmin=.38,
+    xmax=1,
+    xtick distance=.05,
+    xticklabel style={
         /pgf/number format/fixed,
         /pgf/number format/precision=2,
         /pgf/number format/skip 0.=true,
         font=\normalsize
-},
-xlabel={$\overline{u}$},
-axis lines* = left
+    },
+    xlabel={$\overline{u}$},
+    axis lines* = left
 ]
 
 \draw [dashed] (.9, -.05) -- (.9, .15);
 
 % upper bound
 <<#:ubsegments>>
-\addplot [  color=darkgray,
-            solid,
-            line width=\PLOTLINEWIDTH,
-            mark = *,
-            mark repeat = 5,
-            mark size = .8pt]
-            coordinates{
-              <<coordinates>>
-            };
+\addplot[
+    color=darkgray,
+    solid,
+    line width=\PLOTLINEWIDTH,
+    mark = *,
+    mark repeat = 5,
+    mark size = .8pt
+]
+coordinates{
+    <<coordinates>>
+};
 <</:ubsegments>>
 
 % lower bound
 <<#:lbsegments>>
-\addplot [  color=lightgray,
-            solid,
-            line width=\PLOTLINEWIDTH,
-            mark = *,
-            mark repeat = 5,
-            mark size = .8pt]
-            coordinates{
-              <<coordinates>>
-            };
+\addplot[
+    color=lightgray,
+    solid,
+    line width=\PLOTLINEWIDTH,
+    mark = *,
+    mark repeat = 5,
+    mark size = .8pt
+]
+coordinates{
+    <<coordinates>>
+};
 <</:lbsegments>>
 
 % truth bound
 <<#:truesegments>>
-\addplot [  color=black,
-            solid,
-            line width=\PLOTLINEWIDTH]
-            coordinates{
-              <<coordinates>>
-            };
+\addplot[
+    color=black,
+    solid,
+    line width=\PLOTLINEWIDTH
+]
+coordinates{
+    <<coordinates>>
+};
 <</:truesegments>>
 
 \legend{Upper Bound, Lower Bound, Actual Value}
@@ -124,8 +125,6 @@ axis lines* = left
 
 \end{tikzpicture}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{center}
 \end{landscape}
 \end{document}

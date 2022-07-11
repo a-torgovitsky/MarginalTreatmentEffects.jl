@@ -17,31 +17,25 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MUSTACHE VARIABLES
 %
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
+% ypos
+% ylabel
+%
 % curves -- vector of dictionaries whose keys are:
 %   opts: string following `\addplot`
 %   coordinates: string of (x, y) pairs
 %   shift: optional, shifts the `cycle list`
 %
-% ypos
-% ylabel
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 \begin{landscape}
 \begin{center}
-
-%\large{Bounds as a Function of $K$}
 
 \begin{tikzpicture}
 
@@ -68,46 +62,15 @@
     },
 ]
 
-% \addplot+[forget plot]
-% table[x index = {0}, y index = {1}]\dataK;
-% 
-% \addplot
-% table[x index = {0}, y index = {2}]\dataK;
-% 
-% \pgfplotsset{cycle list shift=-1}
-% 
-% \addplot+[dashed, forget plot]
-% table[x index = {0}, y index = {1}]\dataNP;
-% 
-% \addplot+[dashed]
-% table[x index = {0}, y index = {2}]\dataNP;
-% 
-% \addplot+[forget plot]
-% table[x index = {0}, y index = {3}]\dataK;
-% 
-% \addplot
-% table[x index = {0}, y index = {4}]\dataK;
-% 
-% \pgfplotsset{cycle list shift=-2}
-% 
-% \addplot+[dashed, forget plot]
-% table[x index = {0}, y index = {3}]\dataNP;
-% 
-% \addplot+[dashed]
-% table[x index = {0}, y index = {4}]\dataNP;
-% 
-% \addplot[dotted, mark=star, forget plot]
-% table[x index = {0}, y index = {5}]\dataNP;
-
 <<#:curves>>
 \addplot<<opts>>
-  coordinates{
+coordinates{
     <<coordinates>>
-  };
+};
 
-  <<#shift>>
-  \pgfplotsset{cycle list shift=<<shift>>}
-  <</shift>>
+<<#shift>>
+\pgfplotsset{cycle list shift=<<shift>>}
+<</shift>>
 <</:curves>>
 
 \legend{
@@ -121,8 +84,6 @@
 
 \end{tikzpicture}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{center}
 \end{landscape}
 \end{document}
