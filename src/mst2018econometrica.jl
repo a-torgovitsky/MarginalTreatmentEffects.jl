@@ -1,15 +1,13 @@
+# Produce DGP for MST (2018).
 function dgp_econometrica()
-    DGP(
-        suppZ = reshape([0, 1, 2], :, 1), # reshape returns a 2-dim object,
-        densZ = [0.5, 0.4, 0.1],
-        pscore = [0.35, 0.6, 0.7],
-        mtrs = (
-            MTR(bernstein_basis(2), hcat(0.6, 0.4, 0.3)),
-            MTR(bernstein_basis(2), hcat(0.75, 0.5, 0.25))
-        )
-    )
+    return DGP(suppZ = reshape([0, 1, 2], :, 1), # reshape returns 2-dim object
+               densZ = [0.5, 0.4, 0.1],
+               pscore = [0.35, 0.6, 0.7],
+               mtrs = (MTR(bernstein_basis(2), hcat(0.6, 0.4, 0.3)),
+                       MTR(bernstein_basis(2), hcat(0.75, 0.5, 0.25))))
 end
 
+# Produce default aesthetics for MST (2018).
 function defaults_econometrica()
     settings = Dict(
         :axisheight => "2in",
@@ -50,24 +48,21 @@ end
 function run_np_ivs_notitle(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    bases = [(constantspline_basis(knots),
-              constantspline_basis(knots))]
-    assumptions = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => false,
-        :ivslope => true
-    )
+    bases = [(constantspline_basis(knots), constantspline_basis(knots))]
+    assumptions = Dict{Symbol, Any}(:lb => 0,
+                                    :ub => 1,
+                                    :saturated => false,
+                                    :ivslope => true)
     opts = defaults_econometrica()
-    opts[1][:title] = "~"
-    texfn = mtrs_and_weights(savedir, "np-ivs-no-title";
-        dgp = dgp,
-        tp = late(dgp, 0.35, 0.9),
-        bases = bases,
-        assumptions = assumptions,
-        mtroption = "truth",
-        opts = opts
-    )
+    opts[1][:title] = "~" # no title
+    texfn = mtrs_and_weights(savedir,
+                             "np-ivs-no-title";
+                              dgp = dgp,
+                              tp = late(dgp, 0.35, 0.9),
+                              bases = bases,
+                              assumptions = assumptions,
+                              mtroption = "truth",
+                              opts = opts)
     if compile
         compile_latex(texfn)
     end
@@ -77,28 +72,23 @@ end
 function run_np_ivs(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    bases = [(constantspline_basis(knots),
-              constantspline_basis(knots))]
-    assumptions = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => false,
-        :ivslope => true
-    )
+    bases = [(constantspline_basis(knots), constantspline_basis(knots))]
+    assumptions = Dict{Symbol, Any}(:lb => 0,
+                                    :ub => 1,
+                                    :saturated => false,
+                                    :ivslope => true)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
-    texfn = mtrs_and_weights(savedir, "np-ivs";
-        dgp = dgp,
-        tp = late(dgp, 0.35, 0.9),
-        bases = bases,
-        assumptions = assumptions,
-        mtroption = "max",
-        opts = opts,
-        attributes = Dict(
-            "LogLevel" => 0,
-            "SolveType" => 1
-        )
-    )
+    texfn = mtrs_and_weights(savedir,
+                             "np-ivs";
+                             dgp = dgp,
+                             tp = late(dgp, 0.35, 0.9),
+                             bases = bases,
+                             assumptions = assumptions,
+                             mtroption = "max",
+                             opts = opts,
+                             attributes = Dict("LogLevel" => 0,
+                                               "SolveType" => 1))
     if compile
         compile_latex(texfn)
     end
@@ -108,25 +98,22 @@ end
 function run_np_ivs_olss(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    bases = [(constantspline_basis(knots),
-              constantspline_basis(knots))]
-    assumptions = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => false,
-        :ivslope => true,
-        :olsslope => true,
-    )
+    bases = [(constantspline_basis(knots), constantspline_basis(knots))]
+    assumptions = Dict{Symbol, Any}(:lb => 0,
+                                    :ub => 1,
+                                    :saturated => false,
+                                    :ivslope => true,
+                                    :olsslope => true,)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
-    texfn = mtrs_and_weights(savedir, "np-ivs-olss";
-        dgp = dgp,
-        tp = late(dgp, 0.35, 0.9),
-        bases = bases,
-        assumptions = assumptions,
-        mtroption = "max",
-        opts = opts
-    )
+    texfn = mtrs_and_weights(savedir,
+                             "np-ivs-olss";
+                             dgp = dgp,
+                             tp = late(dgp, 0.35, 0.9),
+                             bases = bases,
+                             assumptions = assumptions,
+                             mtroption = "max",
+                             opts = opts)
     if compile
         compile_latex(texfn)
     end
@@ -136,14 +123,11 @@ end
 function run_np_ivnps(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    bases = [(constantspline_basis(knots),
-              constantspline_basis(knots))]
-    assumptions = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => false,
-        :ivslopeind => [2, 3],
-    )
+    bases = [(constantspline_basis(knots), constantspline_basis(knots))]
+    assumptions = Dict{Symbol, Any}(:lb => 0,
+                                    :ub => 1,
+                                    :saturated => false,
+                                    :ivslopeind => [2, 3],)
 
     # The MTRs that achieve the upper and lower bounds on the target parameter
     # need not be unique. As a result, the plot of the maximizing MTRs may be
@@ -162,24 +146,25 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
     # The first version solves the programs without any intervention.
     # The second version adds a constraint to the programs to ensure the
     # maximizing MTR for d = 1 on [0, 0.35) takes on the value of 1.
-    # This ensures that the second version matches the original Figure 4.
+    # This ensures that the second version matches the original Figure 4 on the
+    # the first partition [0, 0.35).
+    # More constraints can be added to ensure the maximizing MTR is the same as
+    # the one in the original Figure 4.
 
     # version 1: no additional constraints
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
-    texfn, v1lb, v1ub = mtrs_and_weights(savedir, "np-ivnps-v1";
-        dgp = dgp,
-        tp = late(dgp, 0.35, 0.9),
-        bases = bases,
-        assumptions = assumptions,
-        mtroption = "max",
-        opts = opts,
-        attributes = Dict(
-            "LogLevel" => 0,
-            "SolveType" => 1
-        ),
-        return_bounds = true
-    )
+    texfn, v1lb, v1ub = mtrs_and_weights(savedir,
+                                         "np-ivnps-v1";
+                                          dgp = dgp,
+                                          tp = late(dgp, 0.35, 0.9),
+                                          bases = bases,
+                                          assumptions = assumptions,
+                                          mtroption = "max",
+                                          opts = opts,
+                                          attributes = Dict("LogLevel" => 0,
+                                                            "SolveType" => 1),
+                                          return_bounds = true)
     if compile
         compile_latex(texfn)
     end
@@ -188,25 +173,23 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
     fixdf = DataFrame(ℓ = 1, d = 1, j = 1, k = 1, fix = 1.0)
-    texfn, v2lb, v2ub = mtrs_and_weights(savedir, "np-ivnps-v2";
-        dgp = dgp,
-        tp = late(dgp, 0.35, 0.9),
-        bases = bases,
-        assumptions = assumptions,
-        mtroption = "max",
-        opts = opts,
-        attributes = Dict(
-            "LogLevel" => 0,
-            "SolveType" => 1
-        ),
-        fixdf = fixdf,
-        return_bounds = true
-    )
+    texfn, v2lb, v2ub = mtrs_and_weights(savedir,
+                                         "np-ivnps-v2";
+                                         dgp = dgp,
+                                         tp = late(dgp, 0.35, 0.9),
+                                         bases = bases,
+                                         assumptions = assumptions,
+                                         mtroption = "max",
+                                         opts = opts,
+                                         attributes = Dict("LogLevel" => 0,
+                                                           "SolveType" => 1),
+                                         fixdf = fixdf,
+                                         return_bounds = true)
     if compile
         compile_latex(texfn)
     end
 
-    # The two versions produce the same upper and lower bounds
+    # The two versions produce the same upper and lower bounds.
     @assert v1lb == v2lb
     @assert v1ub == v2ub
 end
@@ -215,23 +198,20 @@ end
 function run_np_sharp(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    bases = [(constantspline_basis(knots),
-              constantspline_basis(knots))]
-    assumptions = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => true
-    )
+    bases = [(constantspline_basis(knots), constantspline_basis(knots))]
+    assumptions = Dict{Symbol, Any}(:lb => 0,
+                                    :ub => 1,
+                                    :saturated => true)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
-    texfn = mtrs_and_weights(savedir, "np-sharp";
-        dgp = dgp,
-        tp = late(dgp, 0.35, 0.9),
-        bases = bases,
-        assumptions = assumptions,
-        mtroption = "max",
-        opts = opts
-    )
+    texfn = mtrs_and_weights(savedir,
+                             "np-sharp";
+                             dgp = dgp,
+                             tp = late(dgp, 0.35, 0.9),
+                             bases = bases,
+                             assumptions = assumptions,
+                             mtroption = "max",
+                             opts = opts)
     if compile
         compile_latex(texfn)
     end
@@ -241,24 +221,21 @@ end
 function run_np_sharp_decr(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
-    bases = [(constantspline_basis(knots),
-              constantspline_basis(knots))]
-    assumptions = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => true,
-        :decreasing_level => [(1, 0), (1, 1)]
-    )
+    bases = [(constantspline_basis(knots), constantspline_basis(knots))]
+    assumptions = Dict{Symbol, Any}(:lb => 0,
+                                    :ub => 1,
+                                    :saturated => true,
+                                    :decreasing_level => [(1, 0), (1, 1)])
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds, MTRs decreasing"
-    texfn = mtrs_and_weights(savedir, "np-sharp-decr";
-        dgp = dgp,
-        tp = late(dgp, 0.35, 0.9),
-        bases = bases,
-        assumptions = assumptions,
-        mtroption = "max",
-        opts = opts
-    )
+    texfn = mtrs_and_weights(savedir,
+                             "np-sharp-decr";
+                             dgp = dgp,
+                             tp = late(dgp, 0.35, 0.9),
+                             bases = bases,
+                             assumptions = assumptions,
+                             mtroption = "max",
+                             opts = opts)
     if compile
         compile_latex(texfn)
     end
@@ -267,25 +244,22 @@ end
 # Sharp LATE Bounds w/ Decr., 9th degree MTRs (Figure 7)
 function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
     dgp = dgp_econometrica()
-    bases = [(bernstein_basis(9),
-              bernstein_basis(9))];
-    assumptions = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => true,
-        :decreasing_level => [(1, 0), (1, 1)]
-    )
+    bases = [(bernstein_basis(9), bernstein_basis(9))]
+    assumptions = Dict{Symbol, Any}(:lb => 0,
+                                    :ub => 1,
+                                    :saturated => true,
+                                    :decreasing_level => [(1, 0), (1, 1)])
     opts = defaults_econometrica()
-    # BUG: Order is 10, but degree is 9!
+    # FIX: Order is 10, but degree is 9!
     opts[1][:title] = "Order 9 polynomial bounds, MTRs decreasing"
-    texfn = mtrs_and_weights(savedir, "np-sharp-decr-k9";
-        dgp = dgp,
-        tp = late(dgp, 0.35, 0.9),
-        bases = bases,
-        assumptions = assumptions,
-        mtroption = "max",
-        opts = opts
-    )
+    texfn = mtrs_and_weights(savedir,
+                             "np-sharp-decr-k9";
+                             dgp = dgp,
+                             tp = late(dgp, 0.35, 0.9),
+                             bases = bases,
+                             assumptions = assumptions,
+                             mtroption = "max",
+                             opts = opts)
     if compile
         compile_latex(texfn)
     end
