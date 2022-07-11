@@ -1,69 +1,108 @@
-# Create coordinates for \addplot
-# If `steps` is not specified, return a vector of coordinates, where
-#   discontinuities separate vectors from one another.
-#   This is particularly useful when drawing the MTRs.
-# If `steps` is specified, return a vector of coordinates (i.e., endpoints)
-#   `steps` controls how far apart the points are.
-#   This is particularly useful when drawing tick marks for the weights.
-# The MTRs and the weights use different strategies for creating their
-# coordinates because we know the weights are piecewise-constant. Hence, we can
-# draw them without approximation. On the other hand, we don't know where the
-# MTRs are discontinuous. So, we discover where they have discontinuities by
-# checking the slopes of the secant lines between two consecutive points. If
-# the magnitude of the slopes is larger than `tol`, then we have found a
-# discontinuity. These discontinuities determine the segments.
-#
-# TODO: is there a way to combine these two frameworks? Maybe using the basis
-# for the MTRs can help determine whether we should "discover" the cutoffs...?
-# TODO: use multiple dispatch to get rid of `isnothing(steps)` conditional.
-function df_to_coordinates(df, xindex, yindex; steps = nothing, tol::Number = 7)
+# TODO(omkarakatta): consider getting rid of `isnothing(steps)` conditional?
+
+"""
+    df_to_coordinates(df::DataFrame,
+                      xindex,
+                      yindex;
+                      steps::Union{Number, Nothing} = nothing,
+                      disctol::Number = 7)
+
+This function returns a vector of strings. Each string is of the form
+    "(x, y)(x, y) ⋯ (x, y)"
+where each (x, y) tuple is a coordinate for the `addplot` command.
+Each string of coordinates is associated with its own `addplot` command.
+Consequently, all the (x, y) tuples within a string will be connected;
+the (x, y) tuples across different strings will not be connected.
+This design is useful when there are discontinuities.
+
+The primary use of this function is to plot the following:
+    1. weights associated with IV-like estimands and target parameters
+    2. MTRs
+
+The MTRs and the weights use different strategies for creating their
+coordinates because we know the weights are piecewise-constant. Hence, we can
+draw them without any sort of approximation. To ensure there are tick marks
+within each piece, new points need to be introduced within each piece (see the
+`steps` argument).
+
+On the other hand, we don't know where the MTRs are discontinuous.
+So, we discover where they have discontinuities by checking the slopes of the
+secant lines between two consecutive points. If the magnitude of the slopes is
+larger than `disctol`, then we have found a discontinuity. These
+discontinuities determine the segments.
+
+# Parameters
+
+- df,xindex,yindex: df[:, xindex] and df[:, yindex] contains (x, y) pairs
+- steps: By default, this option is not specified, in which case, no new points
+    will be introduced. If a number is specified, then new points will be
+    introduced on the line segment between two points:
+        (df[i, xindex], df[i, yindex]) and (df[i + 1, xindex], df[i, yindex]).
+    The distance between these new points will be `steps` units.
+- disctol: If the secant line between two consecutive points is larger than
+    this value, then we consider there to be a discontinuity. As a result, a
+    new entry will be made in the output vector.
+"""
+function df_to_coordinates(df::DataFrame,
+                           xindex,
+                           yindex;
+                           steps::Union{Number, Nothing} = nothing,
+                           disctol::Number = 7)
     x = round.(df[:, xindex], digits = 4)
     y = round.(df[:, yindex], digits = 4)
-    coordinates = Vector{String}() # initialize empty vector of strings
+    segments = Vector{String}()
+    # If `steps` is not specified, return a vector of coordinates, where
+    #   discontinuities separate vectors from one another.
+    #   This is useful for drawing the MTRs.
+    # If `steps` is specified, return a vector of coordinates (i.e., endpoints)
+    #   `steps` controls how far apart the points are.
+    #   This is useful for drawing piecewise constant functions for the weights.
     if isnothing(steps)
+        # Find indices after which discontinuities occur
         lagdiff = v -> v - vcat(v[2:length(v)], 0)
         slope = lagdiff(y) ./ lagdiff(x)
-        disc = findall(abs.(slope) .> tol)
-        segment = ""
+        disc = findall(abs.(slope) .> disctol)
+        coordinates = "" # initialize string of coordinates
         for i in 1:nrow(df)
-            segment = segment *
+            coordinates = coordinates *
                 "(" * string(x[i]) * "," * string(y[i]) * ")"
+            # After arriving at a discontinuity, start new string of coordinates
             if i in disc
-                push!(coordinates, segment)
-                segment = ""
+                push!(segments, coordinates)
+                coordinates = ""
             end
             if i == nrow(df)
-                push!(coordinates, segment)
+                push!(segments, coordinates)
             end
         end
     else
-        for segment_idx in 1:nrow(df)
-            yval = y[segment_idx]
-            if yval ≈ 0
+        for i in 1:nrow(df)
+            yval = y[i]
+            if yval ≈ 0 # don't plot trivial values
                 continue
             end
-            endpoints = ""
-            lb = x[segment_idx]
-            if segment_idx == nrow(df)
-                ub = 1
+            coordinates = ""
+            left = x[i]
+            if i == nrow(df)
+                right = 1
             else
-                ub = x[segment_idx + 1]
+                right = x[i + 1]
             end
-            grid = round.(range(lb, ub, step = steps), digits = 3)
-            unique!(push!(grid, ub)) # ensure that ub is in grid
+            grid = round.(range(left, right, step = steps), digits = 3)
+            unique!(push!(grid, ub)) # ensure that upper is in grid
             for point_idx in 1:length(grid)
-                endpoints = endpoints * "(" *
+                coordinates = coordinates * "(" *
                     string(grid[point_idx]) * "," *
                     string(yval) * ")"
             end
-            push!(coordinates, endpoints)
+            push!(segments, coordinates)
         end
     end
-    return coordinates
+    return segments
 end
 
 # Generate the title used in the legend
-# Q: should this be a property of the TargetParameter struct?
+# Q(a-torgovitsky): should this be a property of the TargetParameter struct?
 # If we can't specify default values of these properties, then it might break
 # existing code.
 function legendtitle(tp::TargetParameter)
@@ -74,10 +113,11 @@ function legendtitle(tp::TargetParameter)
     elseif tp.name == "ATT"
         title = "ATT"
     else
-        @error "WIP" tp.name
+        @error "Legend title for target parameter is not supported." tp.name
     end
     return title
 end
+
 function legendtitle(ivlike::IVLike)
     title = ivlike.name
     if occursin("IV Slope for 𝟙(Z == z) for z ∈", ivlike.name)
@@ -91,30 +131,33 @@ function legendtitle(ivlike::IVLike)
     end
     if ivlike.name == "Saturated"
         title = Vector{String}()
-        # BUG: the original Figure 5 in MST (2018) doesn't use the support of Z.
-        # Instead, they use the indices of Z.
+        # FIX: the original Figure 5 in MST (2018) doesn't use the support of Z.
+        # Instead, it uses the indices of Z.
         # It is easier for me to use the indices of Z. If I want to correct
         # this mistake, I somehow need to pass information about the support to
         # this function.
         d_string = ["\$(1 - D)\$", "\$D\$"]
-        z_string = "\$\\mathbb{1}[Z = " .* string.(1:(Int(length(ivlike.s) / 2))) .* "]\$"
+        z_string = "\$\\mathbb{1}[Z = " .*
+            string.(1:(Int(length(ivlike.s) / 2))) .*
+            "]\$"
         # NOTE: without [:], `title` would be a matrix
         title = [d * z for z in z_string, d in d_string][:]
     end
     return title
 end
 
-# Generate the title used in path for cross-referencing
+# Generate the title used in TikZ path for cross-referencing
 function pathtitle(tp::TargetParameter)
     if tp.name == "LATE(u₁, u₂)"
         title = "late"
     elseif tp.name == "ATT"
         title = "att"
     else
-        @error "WIP" tp.name
+        @error "Path title for target parameter is not supported." tp.name
     end
     return title
 end
+
 function pathtitle(ivlike::IVLike)
     if ivlike.name == "IV Slope"
         title = "ivs"
@@ -128,11 +171,13 @@ function pathtitle(ivlike::IVLike)
         title = "wald"
     elseif ivlike.name == "Saturated"
         title = "saturated" .* string(collect(1:length(ivlike.s)))
+    else
+        @error "Path title for IV-like estimand is not supported." tp.name
     end
     return title
 end
 
-# Write bounds as an interval
+# Rewrite lower and upper bounds as an interval
 function parse_bounds(result)
     lb = result[:lb]
     ub = result[:ub]
