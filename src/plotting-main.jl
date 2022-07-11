@@ -1,17 +1,29 @@
-# TODO: update documentation
 """
-    mtrs_and_weights(
-        savedir::String,
-        filename::String;
-        dgp::DGP = dgp_econometrica(),
-        tp::TargetParameter = late(dgp, 0.35, 0.9),
-        assumptions::Dict,
-        mtroption::String,
-        defaults = defaults_econometrica()
-    )
+    mtrs_and_weights(savedir::String,
+                     filename::String;
+                     dgp::DGP,
+                     tp::TargetParameter,
+                     bases::Vector{Tuple{MTRBasis, MTRBasis}},
+                     assumptions::Dict,
+                     mtroption::String,
+                     opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}, Vector{String}},
+                     attributes::Dict = Dict("LogLevel" => 0),
+                     startdf::DataFrame= DataFrame(ℓ = Int64[],
+                                                   d = Int64[],
+                                                   j = Int64[],
+                                                   k = Int64[],
+                                                   start = Float64[]),
+                     fixdf::DataFrame= DataFrame(ℓ = Int64[],
+                                                 d = Int64[],
+                                                 j = Int64[],
+                                                 k = Int64[],
+                                                 fix = Float64[]),
+                     return_bounds::Bool = false)
 
-This function produces the tex file used to create the figures in MST (2018).
-The file path of this tex file will be returned.
+This function produces the tex file used to reproduce MST (2018) and MT (2018).
+The file path of this tex file will be returned if `return_bounds` is false.
+Otherwise, return a tuple with the file path of the tex file, the lower bound,
+and upper bound.
 
 # Parameters
 
@@ -21,58 +33,63 @@ The file path of this tex file will be returned.
 - tp: target parameter
 - bases: vector of tuples, where each tuple is a pair of MTRBasis structs
 - assumptions: dictionary of assumptions, including IV-like estimand
-- mtroption: either "truth", "max", or "min"
-- opts: tuple of four elements:
+- mtroption: either "truth", "max", or "min" to plot true DGP MTRs, maximizing
+    MTRs, or minimizing MTRs, resp.
+- opts: aesthetic information organized in
     1. settings::Dict
     2. colors::Vector{String}
     3. marks::Vector{String}
     4. marksize::Vector{String}
+    5. linetype::Vector{String}
+- attributes: set attributes associated with Clp.jl
+- startdf: data frame to warm-start decision variables
+- fixdf: data frame to fix decision variables to a specified value
+- return_bounds: if true, also return lower and upper bounds; default is false
 """
-function mtrs_and_weights(
-    savedir::String,
-    filename::String;
-    dgp::DGP,
-    tp::TargetParameter,
-    bases::Vector{Tuple{MTRBasis, MTRBasis}},
-    assumptions::Dict,
-    mtroption::String,
-    opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}, Vector{String}},
-    attributes::Dict = Dict("LogLevel" => 0),
-    startdf::DataFrame= DataFrame(
-        ℓ = Int64[],
-        d = Int64[],
-        j = Int64[],
-        k = Int64[],
-        start = Float64[]
-    ),
-    fixdf::DataFrame= DataFrame(
-        ℓ = Int64[],
-        d = Int64[],
-        j = Int64[],
-        k = Int64[],
-        fix = Float64[]
-    ),
-    return_bounds::Bool = false
-)
-    # initialize
-    settings, colors, marks, marksize, linetype = opts # aesthetic information
+function mtrs_and_weights(savedir::String,
+                          filename::String;
+                          dgp::DGP,
+                          tp::TargetParameter,
+                          bases::Vector{Tuple{MTRBasis, MTRBasis}},
+                          assumptions::Dict,
+                          mtroption::String,
+                          opts::Tuple{Dict,
+                                      Vector{String},
+                                      Vector{String},
+                                      Vector{String},
+                                      Vector{String}},
+                          attributes::Dict = Dict("LogLevel" => 0),
+                          startdf::DataFrame= DataFrame(ℓ = Int64[],
+                                                        d = Int64[],
+                                                        j = Int64[],
+                                                        k = Int64[],
+                                                        start = Float64[]),
+                          fixdf::DataFrame= DataFrame(ℓ = Int64[],
+                                                      d = Int64[],
+                                                      j = Int64[],
+                                                      k = Int64[],
+                                                      fix = Float64[]),
+                          return_bounds::Bool = false)
+    # Initialize Mustache.jl variables.
     m0segments = Vector{Dict}() # keeps track of MTR segments for d = 0
     m1segments = Vector{Dict}() # keeps track of MTR segments for d = 1
-    d0weights = Vector{Dict}() # keeps track of weight segments for d = 0
-    d1weights = Vector{Dict}() # keeps track of weight segments for d = 1
-    legend = Vector{Dict}() # keeps track of legend entries
-    aesthetic_counter = 1 # keeps track of colors, marks, and marksize
+    d0weights = Vector{Dict}()  # keeps track of weight segments for d = 0
+    d1weights = Vector{Dict}()  # keeps track of weight segments for d = 1
+    legend = Vector{Dict}()     # keeps track of legend entries
+    ivlike_weights = Vector()   # used to compute y-axis limits
 
-    # compute bounds
-    result = compute_bounds(
-        tp,
-        bases,
-        assumptions,
-        dgp,
-        attributes,
-        startdf,
-        fixdf
-    )
+    # Setup
+    settings, colors, marks, marksize, linetype = opts # aesthetic information
+    aesthetic_counter = 1       # keeps track of colors, marks, etc.
+
+    # Compute bounds
+    result = compute_bounds(tp,
+                            bases,
+                            assumptions,
+                            dgp,
+                            attributes,
+                            startdf,
+                            fixdf)
 
     # Collect data for MTRs
     if mtroption == "truth"
@@ -93,7 +110,7 @@ function mtrs_and_weights(
             settings[:titlesuffix]
         settings[:mtrlegendtext] = "Minimizing MTRs"
     else
-        @error "unsupported" mtroption
+        @error "Unsupported value for mtroption." mtroption
     end
     step = 500
     ugrid = (1/step):(1/step):(1 - 1/step)
@@ -103,386 +120,164 @@ function mtrs_and_weights(
     mtr_results[:, "mtr1"] = evaluate_mtr(mtr1, ev)
 
     # Store MTR data in dictionary for Mustache.jl
-    # TODO: avoid duplication b/t the for-loops for mtr0 and mtr1
     m0coordinates = df_to_coordinates(mtr_results, :u, :mtr0)
     for coordinate_idx in 1:length(m0coordinates)
-        segment = Dict(
-            "pathname" => "mtr0" * string(coordinate_idx),
-            "coordinates" => m0coordinates[coordinate_idx]
-        )
+        segment = Dict("pathname" => "mtr0" * string(coordinate_idx),
+                       "coordinates" => m0coordinates[coordinate_idx])
         push!(m0segments, segment)
     end
     m1coordinates = df_to_coordinates(mtr_results, :u, :mtr1)
     for coordinate_idx in 1:length(m1coordinates)
-        segment = Dict(
-            "pathname" => "mtr1" * string(coordinate_idx),
-            "coordinates" => m1coordinates[coordinate_idx]
-        )
+        segment = Dict("pathname" => "mtr1" * string(coordinate_idx),
+                       "coordinates" => m1coordinates[coordinate_idx])
         push!(m1segments, segment)
     end
 
     # Collect data for target parameter
+    push!(legend, Dict("color" => colors[aesthetic_counter],
+                       "mark" => marks[aesthetic_counter],
+                       "marksize" => marksize[aesthetic_counter],
+                       "legendtitle" => legendtitle(tp),
+                       "linetype" => linetype[aesthetic_counter]))
     tp_weights = compute_average_weights(tp, dgp)
     tp_d0_coord = df_to_coordinates(tp_weights, :u, 3, steps = 1/step)
-    tp_d1_coord = df_to_coordinates(tp_weights, :u, 2, steps = 1/step)
-    push!(legend, Dict(
-        "color" => colors[aesthetic_counter],
-        "mark" => marks[aesthetic_counter],
-        "marksize" => marksize[aesthetic_counter],
-        "legendtitle" => legendtitle(tp),
-        "linetype" => linetype[aesthetic_counter]
-    ))
     for coordinate_idx in 1:length(tp_d0_coord)
-        segment = Dict(
-            "pathname" => "d0" * pathtitle(tp) * string(coordinate_idx),
-            "color" => colors[aesthetic_counter],
-            "mark" => marks[aesthetic_counter],
-            "marksize" => marksize[aesthetic_counter],
-            "coordinates" => tp_d0_coord[coordinate_idx],
-            "linetype" => linetype[aesthetic_counter]
-        )
+        segment = Dict("pathname" => "d0" * pathtitle(tp) *
+                           string(coordinate_idx),
+                       "color" => colors[aesthetic_counter],
+                       "mark" => marks[aesthetic_counter],
+                       "marksize" => marksize[aesthetic_counter],
+                       "coordinates" => tp_d0_coord[coordinate_idx],
+                       "linetype" => linetype[aesthetic_counter])
         push!(d0weights, segment)
     end
+    tp_d1_coord = df_to_coordinates(tp_weights, :u, 2, steps = 1/step)
     for coordinate_idx in 1:length(tp_d1_coord)
-        segment = Dict(
-            "pathname" => "d1" * pathtitle(tp) * string(coordinate_idx),
-            "color" => colors[aesthetic_counter],
-            "mark" => marks[aesthetic_counter],
-            "marksize" => marksize[aesthetic_counter],
-            "coordinates" => tp_d1_coord[coordinate_idx],
-            "linetype" => linetype[aesthetic_counter]
-        )
+        segment = Dict("pathname" => "d1" * pathtitle(tp) *
+                           string(coordinate_idx),
+                       "color" => colors[aesthetic_counter],
+                       "mark" => marks[aesthetic_counter],
+                       "marksize" => marksize[aesthetic_counter],
+                       "coordinates" => tp_d1_coord[coordinate_idx],
+                       "linetype" => linetype[aesthetic_counter])
         push!(d1weights, segment)
     end
     aesthetic_counter += 1
 
-    # Collect data for IV-like estimands
-    # TODO: within each if-block, the code is quite similar across the IV-like
-    # etimands. Can we avoid the duplication?
-    ivlike_weights = Vector() # used to compute max and min weights
+    # Local function to update `legend`, `d1weights`, and `d0weights`
+    function update_ivlike_weights(ivlike::IVLike,
+                                   legendtitle::String = legendtitle(ivlike),
+                                   pathtitle::String = pathtitle(ivlike))
+        # Set up legend.
+        push!(legend, Dict("color" => colors[aesthetic_counter],
+                           "mark" => marks[aesthetic_counter],
+                           "marksize" => marksize[aesthetic_counter],
+                           "legendtitle" => legendtitle,
+                           "linetype" => linetype[aesthetic_counter]))
 
+        # Update `ivlike_weights` to find max & min weights for y-axis limits.
+        s_weights = compute_average_weights(ivlike, dgp)
+        push!(ivlike_weights, s_weights[:, 2]...)
+        push!(ivlike_weights, s_weights[:, 3]...)
+
+        # Update coordinates to plot curves.
+        ivlike_d0_coord = Vector()
+        d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/step)
+        push!(ivlike_d0_coord, d0_coordinates...)
+        ivlike_d1_coord = Vector()
+        d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/step)
+        push!(ivlike_d1_coord, d1_coordinates...)
+
+        # Store data about d = 0 weights in dictionary for Mustache.jl.
+        for coordinate_idx in 1:length(ivlike_d0_coord)
+            segment = Dict(
+                "pathname" => "d0" * pathtitle * string(coordinate_idx),
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
+                "coordinates" => ivlike_d0_coord[coordinate_idx],
+                "linetype" => linetype[aesthetic_counter]
+            )
+            push!(d0weights, segment)
+        end
+
+        # Store data about d = 1 weights in dictionary for Mustache.jl.
+        for coordinate_idx in 1:length(ivlike_d1_coord)
+            segment = Dict(
+                "pathname" => "d1" * pathtitle * string(coordinate_idx),
+                "color" => colors[aesthetic_counter],
+                "mark" => marks[aesthetic_counter],
+                "marksize" => marksize[aesthetic_counter],
+                "coordinates" => ivlike_d1_coord[coordinate_idx],
+                "linetype" => linetype[aesthetic_counter]
+            )
+            push!(d1weights, segment)
+        end
+        aesthetic_counter += 1 # update aesthetic counter
+    end
+
+    # Collect data for IV-like estimands.
     if haskey(assumptions, :ivslope) && assumptions[:ivslope]
-        ivlike_d0_coord = Vector()
-        ivlike_d1_coord = Vector()
-        s = ivslope(dgp)
-        s_weights = compute_average_weights(s, dgp)
-        push!(ivlike_weights, s_weights[:, 2]...)
-        push!(ivlike_weights, s_weights[:, 3]...)
-        d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
-        push!(ivlike_d0_coord, d0_coordinates...)
-        d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
-        push!(ivlike_d1_coord, d1_coordinates...)
-        push!(legend, Dict(
-            "color" => colors[aesthetic_counter],
-            "mark" => marks[aesthetic_counter],
-            "marksize" => marksize[aesthetic_counter],
-            "legendtitle" => legendtitle(s),
-            "linetype" => linetype[aesthetic_counter]
-        ))
-
-        # Store data in dictionary for Mustache.jl for d = 0 weights
-        for coordinate_idx in 1:length(ivlike_d0_coord)
-            segment = Dict(
-                "pathname" => "d0" * pathtitle(s) * string(coordinate_idx),
-                "color" => colors[aesthetic_counter],
-                "mark" => marks[aesthetic_counter],
-                "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d0_coord[coordinate_idx],
-                "linetype" => linetype[aesthetic_counter]
-            )
-            push!(d0weights, segment)
-        end
-
-        # Store data in dictionary for Mustache.jl for d = 1 weights
-        for coordinate_idx in 1:length(ivlike_d1_coord)
-            segment = Dict(
-                "pathname" => "d1" * pathtitle(s) * string(coordinate_idx),
-                "color" => colors[aesthetic_counter],
-                "mark" => marks[aesthetic_counter],
-                "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d1_coord[coordinate_idx],
-                "linetype" => linetype[aesthetic_counter]
-            )
-            push!(d1weights, segment)
-        end
-        aesthetic_counter += 1
+        update_ivlike_weights(ivslope(dgp))
     end
-
     if haskey(assumptions, :tslsslopeind) && assumptions[:tslsslopeind]
-        ivlike_d0_coord = Vector()
-        ivlike_d1_coord = Vector()
-        s = tslsslope_indicator(dgp)
-        s_weights = compute_average_weights(s, dgp)
-        push!(ivlike_weights, s_weights[:, 2]...)
-        push!(ivlike_weights, s_weights[:, 3]...)
-        d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
-        push!(ivlike_d0_coord, d0_coordinates...)
-        d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
-        push!(ivlike_d1_coord, d1_coordinates...)
-        push!(legend, Dict(
-            "color" => colors[aesthetic_counter],
-            "mark" => marks[aesthetic_counter],
-            "marksize" => marksize[aesthetic_counter],
-            "legendtitle" => legendtitle(s),
-            "linetype" => linetype[aesthetic_counter]
-        ))
-
-        # Store data in dictionary for Mustache.jl for d = 0 weights
-        for coordinate_idx in 1:length(ivlike_d0_coord)
-            segment = Dict(
-                "pathname" => "d0" * pathtitle(s) * string(coordinate_idx),
-                "color" => colors[aesthetic_counter],
-                "mark" => marks[aesthetic_counter],
-                "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d0_coord[coordinate_idx],
-                "linetype" => linetype[aesthetic_counter]
-            )
-            push!(d0weights, segment)
-        end
-
-        # Store data in dictionary for Mustache.jl for d = 1 weights
-        for coordinate_idx in 1:length(ivlike_d1_coord)
-            segment = Dict(
-                "pathname" => "d1" * pathtitle(s) * string(coordinate_idx),
-                "color" => colors[aesthetic_counter],
-                "mark" => marks[aesthetic_counter],
-                "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d1_coord[coordinate_idx],
-                "linetype" => linetype[aesthetic_counter]
-            )
-            push!(d1weights, segment)
-        end
-        aesthetic_counter += 1
+        update_ivlike_weights(tslsslope_indicator(dgp))
     end
-
     if haskey(assumptions, :wald)
         for p in assumptions[:wald]
-            ivlike_d0_coord = Vector()
-            ivlike_d1_coord = Vector()
-            s = wald(dgp; z₀ = p[1], z₁ = p[2])
-            s_weights = compute_average_weights(s, dgp)
-            push!(ivlike_weights, s_weights[:, 2]...)
-            push!(ivlike_weights, s_weights[:, 3]...)
-            d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
-            push!(ivlike_d0_coord, d0_coordinates...)
-            d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
-            push!(ivlike_d1_coord, d1_coordinates...)
-            push!(legend, Dict(
-                "color" => colors[aesthetic_counter],
-                "mark" => marks[aesthetic_counter],
-                "marksize" => marksize[aesthetic_counter],
-                "legendtitle" => legendtitle(s),
-                "linetype" => linetype[aesthetic_counter]
-            ))
-
-            # Store data in dictionary for Mustache.jl for d = 0 weights
-            for coordinate_idx in 1:length(ivlike_d0_coord)
-                segment = Dict(
-                    "pathname" => "d0" * pathtitle(s) * string(coordinate_idx),
-                    "color" => colors[aesthetic_counter],
-                    "mark" => marks[aesthetic_counter],
-                    "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d0_coord[coordinate_idx],
-                    "linetype" => linetype[aesthetic_counter]
-                )
-                push!(d0weights, segment)
-            end
-
-            # Store data in dictionary for Mustache.jl for d = 1 weights
-            for coordinate_idx in 1:length(ivlike_d1_coord)
-                segment = Dict(
-                    "pathname" => "d1" * pathtitle(s) * string(coordinate_idx),
-                    "color" => colors[aesthetic_counter],
-                    "mark" => marks[aesthetic_counter],
-                    "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d1_coord[coordinate_idx],
-                    "linetype" => linetype[aesthetic_counter]
-                )
-                push!(d1weights, segment)
-            end
-            aesthetic_counter += 1
+            update_ivlike_weights(wald(dgp; z₀ = p[1], z₁ = p[2]))
         end
     end
-
     if haskey(assumptions, :olsslope) && assumptions[:olsslope]
-        ivlike_d0_coord = Vector()
-        ivlike_d1_coord = Vector()
-        s = olsslope(dgp)
-        s_weights = compute_average_weights(s, dgp)
-        push!(ivlike_weights, s_weights[:, 2]...)
-        push!(ivlike_weights, s_weights[:, 3]...)
-        d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
-        push!(ivlike_d0_coord, d0_coordinates...)
-        d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
-        push!(ivlike_d1_coord, d1_coordinates...)
-        push!(legend, Dict(
-            "color" => colors[aesthetic_counter],
-            "mark" => marks[aesthetic_counter],
-            "marksize" => marksize[aesthetic_counter],
-            "legendtitle" => legendtitle(s),
-            "linetype" => linetype[aesthetic_counter]
-        ))
-
-        # Store data in dictionary for Mustache.jl for d = 0 weights
-        for coordinate_idx in 1:length(ivlike_d0_coord)
-            segment = Dict(
-                "pathname" => "d0" * pathtitle(s) * string(coordinate_idx),
-                "color" => colors[aesthetic_counter],
-                "mark" => marks[aesthetic_counter],
-                "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d0_coord[coordinate_idx],
-                "linetype" => linetype[aesthetic_counter]
-            )
-            push!(d0weights, segment)
-        end
-
-        # Store data in dictionary for Mustache.jl for d = 1 weights
-        for coordinate_idx in 1:length(ivlike_d1_coord)
-            segment = Dict(
-                "pathname" => "d1" * pathtitle(s) * string(coordinate_idx),
-                "color" => colors[aesthetic_counter],
-                "mark" => marks[aesthetic_counter],
-                "marksize" => marksize[aesthetic_counter],
-                "coordinates" => ivlike_d1_coord[coordinate_idx],
-                "linetype" => linetype[aesthetic_counter]
-            )
-            push!(d1weights, segment)
-        end
-        aesthetic_counter += 1
+        update_ivlike_weights(olsslope(dgp))
     end
-
     if haskey(assumptions, :ivslopeind)
         s_ivlike = ivslope_indicator(dgp; support = assumptions[:ivslopeind])
-        for support_idx in 1:length(s_ivlike.params[:support])
-            zind = s_ivlike.params[:support][support_idx]
-            ivlike_d0_coord = Vector()
-            ivlike_d1_coord = Vector()
+        for i in 1:length(s_ivlike.params[:support])
+            zind = s_ivlike.params[:support][i]
             s = IVLike(
                 "IV Slope for 𝟙(Z = " * string(dgp.suppZ[zind]) * ")",
-                [s_ivlike.s[support_idx]],
+                [s_ivlike.s[i]],
                 Dict(:support => [dgp.suppZ[zind]])
             )
-            s_weights = compute_average_weights(s, dgp)
-            push!(ivlike_weights, s_weights[:, 2]...)
-            push!(ivlike_weights, s_weights[:, 3]...)
-            d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/step)
-            push!(ivlike_d0_coord, d0_coordinates...)
-            d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/step)
-            push!(ivlike_d1_coord, d1_coordinates...)
-            push!(legend, Dict(
-                "color" => colors[aesthetic_counter],
-                "mark" => marks[aesthetic_counter],
-                "marksize" => marksize[aesthetic_counter],
-                "legendtitle" => legendtitle(s_ivlike)[support_idx],
-                "linetype" => linetype[aesthetic_counter]
-            ))
-
-            # Store data in dictionary for Mustache.jl for d = 0 weights
-            for coordinate_idx in 1:length(ivlike_d0_coord)
-                segment = Dict(
-                    "pathname" => "d0" * pathtitle(s_ivlike)[support_idx] * string(coordinate_idx),
-                    "color" => colors[aesthetic_counter],
-                    "mark" => marks[aesthetic_counter],
-                    "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d0_coord[coordinate_idx],
-                    "linetype" => linetype[aesthetic_counter]
-                )
-                push!(d0weights, segment)
-            end
-
-            # Store data in dictionary for Mustache.jl for d = 1 weights
-            for coordinate_idx in 1:length(ivlike_d1_coord)
-                segment = Dict(
-                    "pathname" => "d1" * pathtitle(s_ivlike)[support_idx] * string(coordinate_idx),
-                    "color" => colors[aesthetic_counter],
-                    "mark" => marks[aesthetic_counter],
-                    "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d1_coord[coordinate_idx],
-                    "linetype" => linetype[aesthetic_counter]
-                )
-                push!(d1weights, segment)
-            end
-
-            aesthetic_counter += 1
+            update_ivlike_weights(s,
+                                  legendtitle(s_ivlike)[i],
+                                  pathtitle(s_ivlike)[i])
         end
     end
-
     if haskey(assumptions, :saturated) && assumptions[:saturated]
         s_ivlike = make_slist(dgp.suppZ)
+        # TODO(omkarakatta): is this generalizable to other DGPs?
         legend_order = [1, 3, 5, 2, 4, 6] # ensures correct legend aesthetics
         for saturated_idx in 1:length(s_ivlike.s)
-            ivlike_d0_coord = Vector()
-            ivlike_d1_coord = Vector()
             s = IVLike(
                 "Saturated; index $saturated_idx",
                 [s_ivlike.s[legend_order[saturated_idx]]],
                 nothing
             )
-            s_weights = compute_average_weights(s, dgp) # BOOKMARK: why are all the weights equal to 0?
-            push!(ivlike_weights, s_weights[:, 2]...)
-            push!(ivlike_weights, s_weights[:, 3]...)
-            d0_coordinates = df_to_coordinates(s_weights, :u, 3, steps = 1/500)
-            push!(ivlike_d0_coord, d0_coordinates...)
-            d1_coordinates = df_to_coordinates(s_weights, :u, 2, steps = 1/500)
-            push!(ivlike_d1_coord, d1_coordinates...)
-            push!(legend, Dict(
-                "color" => colors[aesthetic_counter],
-                "mark" => marks[aesthetic_counter],
-                "marksize" => marksize[aesthetic_counter],
-                "legendtitle" => legendtitle(s_ivlike)[saturated_idx],
-                "linetype" => linetype[aesthetic_counter]
-            ))
-
-            # Store data in dictionary for Mustache.jl for d = 0 weights
-            for coordinate_idx in 1:length(ivlike_d0_coord)
-                segment = Dict(
-                    "pathname" => "d0" * pathtitle(s_ivlike)[saturated_idx] * string(coordinate_idx),
-                    "color" => colors[aesthetic_counter],
-                    "mark" => marks[aesthetic_counter],
-                    "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d0_coord[coordinate_idx],
-                    "linetype" => linetype[aesthetic_counter]
-                )
-                push!(d0weights, segment)
-            end
-
-            # Store data in dictionary for Mustache.jl for d = 1 weights
-            for coordinate_idx in 1:length(ivlike_d1_coord)
-                segment = Dict(
-                    "pathname" => "d1" * pathtitle(s_ivlike)[saturated_idx] * string(coordinate_idx),
-                    "color" => colors[aesthetic_counter],
-                    "mark" => marks[aesthetic_counter],
-                    "marksize" => marksize[aesthetic_counter],
-                    "coordinates" => ivlike_d1_coord[coordinate_idx],
-                    "linetype" => linetype[aesthetic_counter]
-                )
-                push!(d1weights, segment)
-            end
-            aesthetic_counter += 1
+            update_ivlike_weights(s,
+                                  legendtitle(s_ivlike)[saturated_idx],
+                                  pathtitle(s_ivlike)[saturated_idx])
         end
     end
 
-    # Update aesthetic information based on weights
-    settings[:weightymax] = ceil(max(
-        tp_weights[:, 2]...,
-        tp_weights[:, 3]...,
-        ivlike_weights...
-    )) + 1
+    # Find y-axis limits using weights.
+    settings[:weightymax] = ceil(max(tp_weights[:, 2]...,
+                                     tp_weights[:, 3]...,
+                                     ivlike_weights...)) + 1
     settings[:weightymin] = -1 * settings[:weightymax]
 
-    # Create tex file
-    # `project` is defined in global scope
+    # Create tex file.
+    # NOTE: `project` is defined in global scope
     templatefn = joinpath(savedir, project, "tikz-template.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
-    tex = render(
-        template;
-        settings...,
-        m0segments = m0segments,
-        m1segments = m1segments,
-        d0weights = d0weights,
-        d1weights = d1weights,
-        legend = legend
-    )
+    tex = render(template;
+                 settings...,
+                 m0segments = m0segments,
+                 m1segments = m1segments,
+                 d0weights = d0weights,
+                 d1weights = d1weights,
+                 legend = legend)
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
         write(file, tex)
@@ -507,29 +302,25 @@ The file path of this tex file will be returned.
 - filename: name of the tex file
 """
 function tikz_extrapolate(savedir::String, filename::String)
-    # setup
-    dgp = dgp_econometrica()
-    bases = [(bernstein_basis(9),
-              bernstein_basis(9))];
-    assumptions = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => true,
-        :decreasing_level => [(1, 0), (1, 1)]
-    )
-
-    # initialize
-    lbsegments = Vector{Dict}() # keeps track of segments for lower bound
-    ubsegments = Vector{Dict}() # keeps track of segments for upper bound
+    # Initialize Mustache.jl variables.
+    lbsegments = Vector{Dict}()   # keeps track of segments for lower bound
+    ubsegments = Vector{Dict}()   # keeps track of segments for upper bound
     truesegments = Vector{Dict}() # keeps track of segments for actual value
 
+    # Setup
+    dgp = dgp_econometrica()
+    bases = [(bernstein_basis(9), bernstein_basis(9))];
+    assumptions = Dict{Symbol, Any}(:lb => 0,
+                                    :ub => 1,
+                                    :saturated => true,
+                                    :decreasing_level => [(1, 0), (1, 1)])
+
+    # Get data to produce plots.
     α = 0.005
     results = DataFrame(u = (0.35 + α):α:1)
     results[:, "LB"] .= NaN
     results[:, "UB"] .= NaN
     results[:, "Truth"] .= NaN
-
-    # compute results
     for u_idx in 1:nrow(results)
         tp = late(dgp, 0.35, results[u_idx, :u])
         r = compute_bounds(tp, bases, assumptions, dgp);
@@ -537,38 +328,30 @@ function tikz_extrapolate(savedir::String, filename::String)
         results[u_idx, 4] = round.(eval_tp(tp, [dgp.mtrs], dgp), digits = 4)
     end
 
-    # convert to coordinates
-    lbcoordinates = df_to_coordinates(results, :u, "LB"; tol = Inf)
+    # Convert to coordinates.
+    lbcoordinates = df_to_coordinates(results, :u, "LB"; disctol = Inf)
     for coordinate_idx in 1:length(lbcoordinates)
-        segment = Dict(
-            "coordinates" => lbcoordinates[coordinate_idx]
-        )
+        segment = Dict("coordinates" => lbcoordinates[coordinate_idx])
         push!(lbsegments, segment)
     end
-    ubcoordinates = df_to_coordinates(results, :u, "UB"; tol = Inf)
+    ubcoordinates = df_to_coordinates(results, :u, "UB"; disctol = Inf)
     for coordinate_idx in 1:length(ubcoordinates)
-        segment = Dict(
-            "coordinates" => ubcoordinates[coordinate_idx]
-        )
+        segment = Dict("coordinates" => ubcoordinates[coordinate_idx])
         push!(ubsegments, segment)
     end
-    truecoordinates = df_to_coordinates(results, :u, "Truth"; tol = Inf)
+    truecoordinates = df_to_coordinates(results, :u, "Truth"; disctol = Inf)
     for coordinate_idx in 1:length(truecoordinates)
-        segment = Dict(
-            "coordinates" => truecoordinates[coordinate_idx]
-        )
+        segment = Dict("coordinates" => truecoordinates[coordinate_idx])
         push!(truesegments, segment)
     end
 
-    # create tex file
+    # Create tex file.
     templatefn = joinpath(savedir, project, "tikz-template-extrapolate.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
-    tex = render(
-        template;
-        lbsegments = lbsegments,
-        ubsegments = ubsegments,
-        truesegments = truesegments
-    )
+    tex = render(template;
+                 lbsegments = lbsegments,
+                 ubsegments = ubsegments,
+                 truesegments = truesegments)
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
         write(file, tex)
@@ -576,18 +359,27 @@ function tikz_extrapolate(savedir::String, filename::String)
     return texfn
 end
 
-# Plot MTRs and MTE
-function mtr_mte(
-    savedir::String,
-    filename::String;
-    dgp::DGP
-)
-    # initialize
-    m0segments = Vector{Dict}() # keep track of MTR segments for d = 0
-    m1segments = Vector{Dict}() # keep track of MTR segments for d = 1
+"""
+    mtr_and_mte(savedir::String, filename::String)
+
+This function plots the DGP MTRs and the corresponding MTE.
+The file path of this tex file will be returned.
+
+# Parameters
+
+- savedir: directory where the tex file will be stored
+- filename: name of the tex file
+"""
+function mtr_mte(savedir::String, filename::String)
+    # Initialize Mustache.jl variables.
+    m0segments = Vector{Dict}()  # keep track of MTR segments for d = 0
+    m1segments = Vector{Dict}()  # keep track of MTR segments for d = 1
     mtesegments = Vector{Dict}() # keep track of MTE segments
 
-    # get data
+    # Setup
+    dgp = dgp_review()
+
+    # Get data to produce plots.
     step = 500
     ugrid = (1/step):(1/step):(1 - 1/step)
     ev = DataFrame(z = 1, u = ugrid)
@@ -597,35 +389,27 @@ function mtr_mte(
 
     m0coordinates = df_to_coordinates(ev, :u, "m0")
     for segment_idx in 1:length(m0coordinates)
-        segment = Dict(
-            "coordinates" => m0coordinates[segment_idx]
-        )
+        segment = Dict("coordinates" => m0coordinates[segment_idx])
         push!(m0segments, segment)
     end
     m1coordinates = df_to_coordinates(ev, :u, "m1")
     for segment_idx in 1:length(m1coordinates)
-        segment = Dict(
-            "coordinates" => m1coordinates[segment_idx]
-        )
+        segment = Dict("coordinates" => m1coordinates[segment_idx])
         push!(m1segments, segment)
     end
     mtecoordinates = df_to_coordinates(ev, :u, "mte")
     for segment_idx in 1:length(mtecoordinates)
-        segment = Dict(
-            "coordinates" => mtecoordinates[segment_idx]
-        )
+        segment = Dict("coordinates" => mtecoordinates[segment_idx])
         push!(mtesegments, segment)
     end
 
-    # create tex file
+    # Create tex file.
     templatefn = joinpath(savedir, project, "tikz-template-mtr.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
-    tex = render(
-        template;
-        m0segments = m0segments,
-        m1segments = m1segments,
-        mtesegments = mtesegments
-    )
+    tex = render(template;
+                 m0segments = m0segments,
+                 m1segments = m1segments,
+                 mtesegments = mtesegments)
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
         write(file, tex)
@@ -633,162 +417,78 @@ function mtr_mte(
     return texfn
 end
 
-# Plot weights for conventional target parameters
-function conventional_weights(
-    savedir::String,
-    filename::String;
-    dgp::DGP
-)
-    # initialize
-    weights = Vector{Dict}()
+"""
+    conventional_weights(savedir::String, filename::String)
 
-    # setup
+This function produces the tex file used to create Figure 2 in MT (2018).
+It can't be used to create other/similar figures.
+The file path of this tex file will be returned.
+
+This function plots the weights of conventional target parameters:
+    1. ATE
+    2. ATT
+    3. ATU
+    4. LATE₁₂
+    5. LATE₂₃
+    6. LATE₃₄
+
+# Parameters
+
+- savedir: directory where the tex file will be stored
+- filename: name of the tex file
+"""
+function conventional_weights(savedir::String, filename::String)
+    # Initialize Mustache.jl variables.
+    weights = Vector{Dict}() # keep track of weights for target parameters
+
+    # Setup
+    dgp = dgp_review()
     u₁ = dgp.pscore[findall(dgp.suppZ .== 1)][1]
     u₂ = dgp.pscore[findall(dgp.suppZ .== 2)][1]
     u₃ = dgp.pscore[findall(dgp.suppZ .== 3)][1]
     u₄ = dgp.pscore[findall(dgp.suppZ .== 4)][1]
+    steps = 500
 
     # p-score labels on top of plot
     pscore = replace(string(dgp.pscore), "[" => "", "]" => "")
-    pscorelabel = join("\$p(" .* string.(collect(1:length(dgp.pscore))) .* ")\$", ",")
+    pscorelabel = join("\$p(" .* string.(collect(1:length(dgp.pscore))) .*
+                       ")\$", ",")
 
-    # weights for ATE
-    segment_info = df_to_coordinates(
-        compute_average_weights(ate(dgp)),
-        :u,
-        2,
-        steps = 1/500
-    )
-    segments = Vector{Dict}()
-    for segment_idx in 1:length(segment_info)
-        push!(segments, Dict(
-            "coordinates" => segment_info[segment_idx],
-            "opts" => ""
-        ))
+    # Update `weights` with coordinate information and legend title.
+    # To ensure all segments associated with a target parameter is drawn with
+    # the same aesthetics, all but the last segment must be drawn with the
+    # "forget plot" option.
+    function update_tp_weights(tp::TargetParameter,
+                               legendtitle::String = legendtitle(tp))
+        segments = Vector{Dict}()
+        weight_info = compute_average_weights(tp, dgp)
+        segment_info = df_to_coordinates(weight_info, :u, 2, steps = 1/steps)
+        for i in 1:length(segment_info)
+            opts = ifelse(i == length(segment_info), "", "forget plot")
+            segment = Dict("coordinates" => segment_info[i], "opts" => opts)
+            push!(segments, segment)
+        end
+        tp_info = Dict("legendtitle" => legendtitle, "segments" => segments)
+        push!(weights, tp_info)
     end
-    tp_ate = Dict(
-        "legendtitle" => "\$\\text{ATE}\$",
-        "segments" => segments
-    )
-    push!(weights, tp_ate)
 
-    # weights for ATT
-    segment_info = df_to_coordinates(
-        compute_average_weights(att(dgp), dgp),
-        :u,
-        2,
-        steps = 1/500
-    )
-    segments = Vector{Dict}()
-    for segment_idx in 1:length(segment_info)
-        push!(segments, Dict(
-            "coordinates" => segment_info[segment_idx],
-            "opts" => ifelse(
-                segment_idx == length(segment_info),
-                "",
-                "forget plot"
-            )
-        ))
-    end
-    tp_att = Dict(
-        "legendtitle" => "\$\\text{ATT}\$",
-        "segments" => segments
-    )
-    push!(weights, tp_att)
+    update_tp_weights(ate(dgp))
+    update_tp_weights(att(dgp))
+    update_tp_weights(atu(dgp))
+    update_tp_weights(late(dgp, u₁, u₂),
+                      "\$\\text{LATE}_{1 \\rightarrow 2}\$")
+    update_tp_weights(late(dgp, u₂, u₃),
+                      "\$\\text{LATE}_{2 \\rightarrow 3}\$")
+    update_tp_weights(late(dgp, u₃, u₄),
+                      "\$\\text{LATE}_{3 \\rightarrow 4}\$")
 
-    # weights for ATU
-    segment_info = df_to_coordinates(
-        compute_average_weights(atu(dgp), dgp),
-        :u,
-        2,
-        steps = 1/500
-    )
-    segments = Vector{Dict}()
-    for segment_idx in 1:length(segment_info)
-        push!(segments, Dict(
-            "coordinates" => segment_info[segment_idx],
-            "opts" => ifelse(
-                segment_idx == length(segment_info),
-                "",
-                "forget plot"
-            )
-        ))
-    end
-    tp_atu = Dict(
-        "legendtitle" => "\$\\text{ATU}\$",
-        "segments" => segments
-    )
-    push!(weights, tp_atu)
-
-    # weights for LATE₁₂
-    segment_info = df_to_coordinates(
-        compute_average_weights(late(dgp, u₁, u₂)),
-        :u,
-        2,
-        steps = 1/500
-    )
-    segments = Vector{Dict}()
-    for segment_idx in 1:length(segment_info)
-        push!(segments, Dict(
-            "coordinates" => segment_info[segment_idx],
-            "opts" => ifelse(segment_idx == length(segment_info), "", "forget plot")
-        ))
-    end
-    tp_late₁₂ = Dict(
-        "legendtitle" => "\$\\text{LATE}_{1 \\rightarrow 2}\$",
-        "segments" => segments
-    )
-    push!(weights, tp_late₁₂)
-
-    # weights for LATE₂₃
-    segment_info = df_to_coordinates(
-        compute_average_weights(late(dgp, u₂, u₃)),
-        :u,
-        2,
-        steps = 1/500
-    )
-    segments = Vector{Dict}()
-    for segment_idx in 1:length(segment_info)
-        push!(segments, Dict(
-            "coordinates" => segment_info[segment_idx],
-            "opts" => ifelse(segment_idx == length(segment_info), "", "forget plot")
-        ))
-    end
-    tp_late₂₃ = Dict(
-        "legendtitle" => "\$\\text{LATE}_{2 \\rightarrow 3}\$",
-        "segments" => segments
-    )
-    push!(weights, tp_late₂₃)
-
-    # weights for LATE₃₄
-    segment_info = df_to_coordinates(
-        compute_average_weights(late(dgp, u₃, u₄)),
-        :u,
-        2,
-        steps = 1/500
-    )
-    segments = Vector{Dict}()
-    for segment_idx in 1:length(segment_info)
-        push!(segments, Dict(
-            "coordinates" => segment_info[segment_idx],
-            "opts" => ifelse(segment_idx == length(segment_info), "", "forget plot")
-        ))
-    end
-    tp_late₃₄ = Dict(
-        "legendtitle" => "\$\\text{LATE}_{3 \\rightarrow 4}\$",
-        "segments" => segments
-    )
-    push!(weights, tp_late₃₄)
-
-    # create tex file
+    # Create tex file.
     templatefn = joinpath(savedir, project, "tikz-template-weights.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
-    tex = render(
-        template;
-        pscore = pscore,
-        pscorelabel = pscorelabel,
-        weights = weights
-    )
+    tex = render(template;
+                 pscore = pscore,
+                 pscorelabel = pscorelabel,
+                 weights = weights)
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
         write(file, tex)
@@ -796,26 +496,37 @@ function conventional_weights(
     return texfn
 end
 
-# Plot extrapolation curves
-function late_extrap(
-    savedir::String,
-    filename::String;
-    dgp::DGP
-)
-    # initialize
-    topticks = Vector{Dict}()
-    curves = Vector{Dict}()
+"""
+    late_extrap(savedir::String, filename::String)
+
+This function produces the tex file used to create Figure 3 in MT (2018).
+It can't be used to create other/similar figures.
+The file path of this tex file will be returned.
+
+This function plots the following target parameters:
+    1. LATE⁻₂₃(α)
+    2. LATE⁺₂₃(α)
+    3. LATEᵖᵐ₂₃(α)
+where α is the degree of extrapolation.
+
+# Parameters
+
+- savedir: directory where the tex file will be stored
+- filename: name of the tex file
+"""
+function late_extrap(savedir::String, filename::String)
+    # Initialize Mustache.jl variables.
+    topticks = Vector{Dict}() # keep track of information in top x-axis
+    curves = Vector{Dict}()   # keep track of different LATE curves
 
     # setup
+    dgp = dgp_review()
     u₁ = dgp.pscore[findall(dgp.suppZ .== 1)][1]
     u₂ = dgp.pscore[findall(dgp.suppZ .== 2)][1]
     u₃ = dgp.pscore[findall(dgp.suppZ .== 3)][1]
     u₄ = dgp.pscore[findall(dgp.suppZ .== 4)][1]
-    
-    assumptions = Dict{Symbol, Any}(:lb => 0, :ub => 1, :saturated => true)
-    bases = [(bernstein_basis(2), bernstein_basis(2))]
 
-    # get data
+    # Get data to produce plots.
     α = collect(0:0.01:0.58)
     push!(α, u₂ - u₁)
     push!(α, u₄ - u₃)
@@ -823,6 +534,8 @@ function late_extrap(
 
     # Since LATE's are point-identified, we can use the bases from the DGP and
     # saturated IV-like estimands to obtain the LATE's we want.
+    assumptions = Dict{Symbol, Any}(:lb => 0, :ub => 1, :saturated => true)
+    bases = [(bernstein_basis(2), bernstein_basis(2))]
     results = DataFrame(α = α)
     results[:, "UB: LATE⁻₂₃(α)"] .= NaN
     results[:, "LB: LATE⁻₂₃(α)"] .= NaN
@@ -831,108 +544,76 @@ function late_extrap(
     results[:, "UB: LATEᵖᵐ₂₃(α)"] .= NaN
     results[:, "LB: LATEᵖᵐ₂₃(α)"] .= NaN
     for row in 1:nrow(results)
-        lb = u₂ - results[row, :α]
-        ub = u₃
-        if (0 < lb < 1) & (0 < ub < 1)
-            tp = late(dgp, lb, ub)
-            r = compute_bounds(tp, bases, assumptions, dgp)
-            results[row, 2] = r[:ub]
-            results[row, 3] = r[:lb]
+        # Update `results` with upper and lower bounds.
+        function update_results(row, lbindex, ubindex)
+            if (0 < lower < 1) & (0 < upper < 1)
+                tp = late(dgp, lower, upper)
+                r = compute_bounds(tp, bases, assumptions, dgp)
+                results[row, ubindex] = r[:ub]
+                results[row, lbindex] = r[:lb]
+            end
         end
-        lb = u₂
-        ub = u₃ + results[row, :α]
-        if (0 < lb < 1) & (0 < ub < 1)
-            tp = late(dgp, lb, ub)
-            r = compute_bounds(tp, bases, assumptions, dgp)
-            results[row, 4] = r[:ub]
-            results[row, 5] = r[:lb]
+        lower = u₂ - results[row, :α]
+        upper = u₃
+        update_results(row, 3, 2)
+        lower = u₂
+        upper = u₃ + results[row, :α]
+        update_results(row, 5, 4)
+        lower = u₂ - results[row, :α] / 2
+        upper = u₃ + results[row, :α] / 2
+        update_results(row, 7, 6)
+    end
+
+    # Update `curves` with legend title and segment-specific information.
+    # `disctol = Inf` ⟹ all segments will be drawn on one curve.
+    function update_curves(column, legendtitle)
+        segments = Vector{Dict}()
+        non_nan = findall(.!isnan.(results[:, column]))
+        coordinates = df_to_coordinates(results[non_nan, :],
+                                        :α,
+                                        column;
+                                        disctol = Inf)
+        for i in 1:length(coordinates)
+            opts = ifelse(i == length(coordinates), "", "forget plot")
+            segment = Dict("opts" => opts,
+                           "coordinates" => coordinates[i])
+            push!(segments, segment)
         end
-        lb = u₂ - results[row, :α] / 2
-        ub = u₃ + results[row, :α] / 2
-        # TODO: do I need the conditional if I ensure α is in the right range?
-        if (0 < lb < 1) & (0 < ub < 1)
-            tp = late(dgp, lb, ub)
-            r = compute_bounds(tp, bases, assumptions, dgp)
-            results[row, 6] = r[:ub]
-            results[row, 7] = r[:lb]
-        end
+        push!(curves, Dict(
+            "segments" => segments,
+            "legendtitle" => legendtitle
+        ))
     end
+    update_curves(2, "\$\\text{LATE}^{-}_{2 \\rightarrow 3}(\\alpha)\$")
+    update_curves(4, "\$\\text{LATE}^{+}_{2 \\rightarrow 3}(\\alpha)\$")
+    update_curves(6, "\$\\text{LATE}^{\\pm}_{2 \\rightarrow 3}(\\alpha)\$")
 
-    # late⁻₂₃(α)
-    non_nan = findall(.!isnan.(results[:, 2]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 2; tol = Inf)
-    segments = Vector{Dict}()
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    push!(curves, Dict(
-        "segments" => segments,
-        "legendtitle" => "\$\\text{LATE}^{-}_{2 \\rightarrow 3}(\\alpha)\$"
-    ))
-
-    # late⁺₂₃(α)
-    non_nan = findall(.!isnan.(results[:, 4]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 4; tol = Inf)
-    segments = Vector{Dict}()
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    push!(curves, Dict(
-        "segments" => segments,
-        "legendtitle" => "\$\\text{LATE}^{+}_{2 \\rightarrow 3}(\\alpha)\$"
-    ))
-
-    # lateᵖᵐ₂₃(α)
-    non_nan = findall(.!isnan.(results[:, 6]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 6; tol = Inf)
-    segments = Vector{Dict}()
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    push!(curves, Dict(
-        "segments" => segments,
-        "legendtitle" => "\$\\text{LATE}^{\\pm}_{2 \\rightarrow 3}(\\alpha)\$"
-    ))
-
-    # top ticks
-    # BUG: in the original figure, the xlabel is p(1) - p(2), but it should be
+    # Set up top ticks.
+    # FIX: in the original figure, the xlabel is p(1) - p(2), but it should be
     # p(2) - p(1). For now, I am making the mistake in the original figure.
-    late₁₃ = Dict(
-        "xpos" => round(u₂ - u₁, digits = 2),
-        "ypos" => round(results[findall(results[:,:α] .== u₂ - u₁), 2][1],
-                        digits = 4),
-        "xlabel" => "\$p(1) - p(2)\$",
-        "nodelabel" => "late13",
-        "xlabelpos" => .09,
-        "ylabelpos" => -.37,
-        "label" => "\$\\text{LATE}_{1 \\rightarrow 3}\$"
-    )
+    # Q(a-torgovitsky): should I fix this mistake?
+    xpos = round(u₂ - u₁, digits = 2)
+    ypos = round(results[findall(results[:,:α] .== u₂ - u₁), 2][1], digits = 4)
+    late₁₃ = Dict("xpos" => xpos,
+                  "ypos" => ypos,
+                  "xlabel" => "\$p(1) - p(2)\$",
+                  "nodelabel" => "late13",
+                  "xlabelpos" => .09,
+                  "ylabelpos" => -.37,
+                  "label" => "\$\\text{LATE}_{1 \\rightarrow 3}\$")
     push!(topticks, late₁₃)
-    late₂₄ = Dict(
-        "xpos" => round(u₄ - u₃, digits = 2),
-        "ypos" => round(results[findall(results[:,:α] .== u₄ - u₃), 4][1],
-                        digits = 4),
-        "xlabel" => "\$p(4) - p(3)\$",
-        "nodelabel" => "late24",
-        "xlabelpos" => .20,
-        "ylabelpos" => -.20,
-        "label" => "\$\\text{LATE}_{2 \\rightarrow 4}\$"
-    )
+    xpos = round(u₄ - u₃, digits = 2)
+    ypos = round(results[findall(results[:,:α] .== u₄ - u₃), 4][1], digits = 4)
+    late₂₄ = Dict("xpos" => xpos,
+                  "ypos" => ypos,
+                  "xlabel" => "\$p(4) - p(3)\$",
+                  "nodelabel" => "late24",
+                  "xlabelpos" => .20,
+                  "ylabelpos" => -.20,
+                  "label" => "\$\\text{LATE}_{2 \\rightarrow 4}\$")
     push!(topticks, late₂₄)
 
-    # xpos and xlabel
+    # Set up `xpos` and `xlabel`.
     xpos = Vector()
     xlabel = Vector()
     for tick in topticks
@@ -942,17 +623,15 @@ function late_extrap(
     xpos = join(xpos, ",")
     xlabel = join(xlabel, ",")
 
-    # create tex file
+    # Create tex file.
     templatefn = joinpath(savedir, project, "tikz-template-late-bounds.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
-    tex = render(
-        template;
-        topticks = topticks,
-        curves = curves,
-        xpos = xpos,
-        xlabel = xlabel,
-        cycleshift = 0
-    )
+    tex = render(template;
+                 topticks = topticks,
+                 curves = curves,
+                 xpos = xpos,
+                 xlabel = xlabel,
+                 cycleshift = 0)
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
         write(file, tex)
@@ -960,48 +639,191 @@ function late_extrap(
     return texfn
 end
 
-# Plot LATE bounds under different information
-function late_information(
-    savedir::String,
-    filename::String;
-    dgp::DGP
-)
-    # initialize
-    topticks = Vector{Dict}()
-    curves = Vector{Dict}()
+# Plot bounds for different polynomial degrees
+"""
+    kbounds(savedir::String, filename::String; dgp::DGP)
 
-    # setup
+This function produces the tex file used to plot the bounds on the ATT under
+different assumptions on the MTR functions:
+    1. Polynomial basis of degree 1, 2, 3, …, 19
+    2. Nonparametric basis
+    3. Decreasing, Polynomial basis of degree 1, 2, 3, …, 19
+    4. Decreasing, Nonparametric basis
+
+# Parameters
+
+- savedir: directory where the tex file will be stored
+- filename: name of the tex file
+- dgp: data generating process
+"""
+function kbounds(savedir::String, filename::String; dgp::DGP)
+    # Initialize Mustache.jl variables.
+    curves = Vector{Dict}() # Keep track of curves
+
+    # Setup
+    nondecr = Dict{Symbol, Any}(:lb => 0,
+                                :ub => 1,
+                                :saturated => false,
+                                :ivslope => true,
+                                :tslsslopeind => true)
+    decr = copy(nondecr)
+    decr[:decreasing_level] = [(1, 0), (1, 1)]
+
+    # Solve program to get `ypos`.
+    tp = att(dgp)
+    bases = [(bernstein_basis(2), bernstein_basis(2))]
+    assumptions = Dict{Symbol, Any}(:lb => 0, :ub => 1, :saturated => true)
+    r = compute_bounds(tp, bases, assumptions, dgp)
+    ypos = round(r[:lb], digits = 4)
+
+    # Get data to produce plots.
+    results = DataFrame(degree = 1:1:19)
+    results[:, "LB Polynomial"] .= NaN
+    results[:, "UB Polynomial"] .= NaN
+    results[:, "LB Nonparametric"] .= NaN
+    results[:, "UB Nonparametric"] .= NaN
+    results[:, "LB Polynomial, Decreasing"] .= NaN
+    results[:, "UB Polynomial, Decreasing"] .= NaN
+    results[:, "LB Nonparametric, Decreasing"] .= NaN
+    results[:, "UB Nonparametric, Decreasing"] .= NaN
+    for row in 1:nrow(results)
+        # bounds for polynomial basis
+        bases = [(bernstein_basis(results[row, :degree]),
+                  bernstein_basis(results[row, :degree]))]
+        r = compute_bounds(tp, bases, nondecr, dgp)
+        results[row, 2:3] = [r[:lb], r[:ub]]
+        r = compute_bounds(tp, bases, decr, dgp)
+        results[row, 6:7] = [r[:lb], r[:ub]]
+        # bounds for nonparametric basis
+        knots = vcat(0, 1, dgp.pscore)
+        bases = [(constantspline_basis(knots),
+                  constantspline_basis(knots))]
+        r = compute_bounds(tp, bases, nondecr, dgp)
+        results[row, 4:5] = [r[:lb], r[:ub]]
+        r = compute_bounds(tp, bases, decr, dgp)
+        results[row, 8:9] = [r[:lb], r[:ub]]
+    end
+
+    # Polynomial
+    poly_lb = df_to_coordinates(results, :degree, 2; disctol = Inf)
+    for coordinate_idx in 1:length(poly_lb)
+        push!(curves, Dict("opts" => "+[forget plot]",
+                           "coordinates" => poly_lb[coordinate_idx]))
+    end
+    poly_ub = df_to_coordinates(results, :degree, 3; disctol = Inf)
+    for coordinate_idx in 1:length(poly_ub)
+        push!(curves, Dict("opts" => "",
+                           "coordinates" => poly_ub[coordinate_idx],
+                           "shift" => -1))
+    end
+
+    # Nonparametric
+    np_lb = df_to_coordinates(results, :degree, 4; disctol = Inf)
+    for coordinate_idx in 1:length(np_lb)
+        push!(curves, Dict("opts" => "+[dashed, forget plot]",
+                           "coordinates" => np_lb[coordinate_idx]))
+    end
+    np_ub = df_to_coordinates(results, :degree, 5; disctol = Inf)
+    for coordinate_idx in 1:length(np_ub)
+        push!(curves, Dict("opts" => "+[dashed]",
+                           "coordinates" => np_ub[coordinate_idx]))
+    end
+
+    # Polynomial, Decreasing
+    poly_lb_decr = df_to_coordinates(results, :degree, 6; disctol = Inf)
+    for coordinate_idx in 1:length(poly_lb_decr)
+        push!(curves, Dict("opts" => "+[forget plot]",
+                           "coordinates" => poly_lb_decr[coordinate_idx]))
+    end
+    poly_ub_decr = df_to_coordinates(results, :degree, 7; disctol = Inf)
+    for coordinate_idx in 1:length(poly_ub_decr)
+        push!(curves, Dict("opts" => "",
+                           "coordinates" => poly_ub_decr[coordinate_idx],
+                           "shift" => -2))
+    end
+
+    # Nonparametric, Decreasing
+    np_lb_decr = df_to_coordinates(results, :degree, 8; disctol = Inf)
+    for coordinate_idx in 1:length(np_lb_decr)
+        push!(curves, Dict("opts" => "+[dashed, forget plot]",
+                           "coordinates" => np_lb_decr[coordinate_idx]))
+    end
+    np_ub_decr = df_to_coordinates(results, :degree, 9; disctol = Inf)
+    for coordinate_idx in 1:length(np_ub_decr)
+        push!(curves, Dict("opts" => "+[dashed]",
+                           "coordinates" => np_ub_decr[coordinate_idx]))
+    end
+
+    # Truth
+    opts = "[dotted, mark=star, forget plot]"
+    coordinates = join("(" .* string.(collect(1:1:19)) .* ", $ypos)")
+    push!(curves, Dict("opts" => opts, "coordinates" => coordinates))
+
+    # Create tex file.
+    templatefn = joinpath(savedir, project, "tikz-template-kbounds.tex")
+    template = Mustache.load(templatefn, ("<<", ">>"))
+    tex = render(template;
+                 curves = curves,
+                 ypos = ypos,
+                 ylabel = "ATT")
+    texfn = joinpath(dirname(templatefn), filename * ".tex")
+    open(texfn, "w") do file
+        write(file, tex)
+    end
+    return texfn
+end
+
+"""
+    late_information(savedir::String, filename::String; dgp::DGP)
+
+This function produces the tex file used to create Figure 10 in MT (2018).
+It can't be used to create other/similar figures.
+The file path of this tex file will be returned.
+
+This function extrapolates and plots the upper and lower bounds of LATE⁺₂₃(α)
+under the assumption of decreasing, 9th degree MTRs using three information
+sets:
+    1. 1st Information Set: IV Slope, Nonparametric TSLS Slope
+    2. 2nd Information Set: IV Slope, Nonparametric TSLS Slope, OLS Slope, Wald
+    3. Sharp Information Set: see MST (2018)
+
+# Parameters
+
+- savedir: directory where the tex file will be stored
+- filename: name of the tex file
+"""
+function late_information(savedir::String, filename::String)
+    # Initialize Mustache.jl variables.
+    topticks = Vector{Dict}() # keep track of information in top x-axis
+    curves = Vector{Dict}()   # keep track of different LATE curves
+
+    # Setup
+    dgp = dgp_review()
     u₁ = dgp.pscore[findall(dgp.suppZ .== 1)][1]
     u₂ = dgp.pscore[findall(dgp.suppZ .== 2)][1]
     u₃ = dgp.pscore[findall(dgp.suppZ .== 3)][1]
     u₄ = dgp.pscore[findall(dgp.suppZ .== 4)][1]
     bases = [(bernstein_basis(9), bernstein_basis(9))]
-    first = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => false,
-        :ivslope => true,
-        :tslsslopeind => true,
-        :decreasing_level => [(1, 0), (1, 1)]
-    )
-    second = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => false,
-        :ivslope => true,
-        :tslsslopeind => true,
-        :wald => [(2, 4)],
-        :olsslope => true,
-        :decreasing_level => [(1, 0), (1, 1)]
-    )
-    sharp = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => true,
-        :decreasing_level => [(1, 0), (1, 1)]
-    )
+    first = Dict{Symbol, Any}(:lb => 0,
+                              :ub => 1,
+                              :saturated => false,
+                              :ivslope => true,
+                              :tslsslopeind => true,
+                              :decreasing_level => [(1, 0), (1, 1)])
+    second = Dict{Symbol, Any}(:lb => 0,
+                               :ub => 1,
+                               :saturated => false,
+                               :ivslope => true,
+                               :tslsslopeind => true,
+                               :wald => [(2, 4)],
+                               :olsslope => true,
+                               :decreasing_level => [(1, 0), (1, 1)])
+    sharp = Dict{Symbol, Any}(:lb => 0,
+                              :ub => 1,
+                              :saturated => true,
+                              :decreasing_level => [(1, 0), (1, 1)])
 
-    # get data
+    # Get data to produce plots.
     α = collect(0:0.01:0.52)
     push!(α, u₄ - u₃)
     sort!(unique!(α))
@@ -1012,12 +834,11 @@ function late_information(
     results[:, "LB: LATE⁺₂₃(α) Second 𝒮"] .= NaN
     results[:, "UB: LATE⁺₂₃(α) Sharp 𝒮"] .= NaN
     results[:, "LB: LATE⁺₂₃(α) Sharp 𝒮"] .= NaN
-
+    lower = u₂
     for row in 1:nrow(results)
-        lb = u₂
-        ub = u₃ + results[row, :α]
-        tp = late(dgp, lb, ub)
-        if (0 < lb < 1) & (0 < ub < 1)
+        upper = u₃ + results[row, :α]
+        tp = late(dgp, lower, upper)
+        if (0 < lower < 1) & (0 < upper < 1)
             r = compute_bounds(tp, bases, first, dgp)
             results[row, 2] = r[:ub]
             results[row, 3] = r[:lb]
@@ -1030,82 +851,32 @@ function late_information(
         end
     end
 
-    # sharp information set
-    segments = Vector{Dict}()
-    non_nan = findall(.!isnan.(results[:, 6]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 6; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => "forget plot",
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
+    # Update `curves` with legend title and segment-specific information.
+    function update_curves(ubindex, lbindex, legendtitle)
+        segments = Vector{Dict}()
+        non_nan = findall(.!isnan.(results[:, ubindex]))
+        coordinates = df_to_coordinates(results[non_nan, :], :α, ubindex; disctol = Inf)
+        for i in 1:length(coordinates)
+            segment = Dict("opts" => "forget plot",
+                           "coordinates" => coordinates[i])
+            push!(segments, segment)
+        end
+        non_nan = findall(.!isnan.(results[:, lbindex]))
+        coordinates = df_to_coordinates(results[non_nan, :], :α, lbindex; disctol = Inf)
+        for i in 1:length(coordinates)
+            opts = ifelse(i == length(coordinates), "", "forget plot")
+            segment = Dict("opts" => opts,
+                           "coordinates" => coordinates[i])
+            push!(segments, segment)
+        end
+        push!(curves, Dict("segments" => segments,
+                           "legendtitle" => legendtitle))
     end
-    non_nan = findall(.!isnan.(results[:, 7]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 7; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    push!(curves, Dict(
-        "segments" => segments,
-        "legendtitle" => "Sharp information set"
-    ))
+    update_curves(6, 7, "Sharp information set")
+    update_curves(4, 5, "Second information set")
+    update_curves(2, 3, "First information set")
 
-    # second information set
-    segments = Vector{Dict}()
-    non_nan = findall(.!isnan.(results[:, 4]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 4; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => "forget plot",
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    non_nan = findall(.!isnan.(results[:, 5]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 5; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    push!(curves, Dict(
-        "segments" => segments,
-        "legendtitle" => "Second information set"
-    ))
-
-    # first information set
-    segments = Vector{Dict}()
-    non_nan = findall(.!isnan.(results[:, 2]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 2; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => "forget plot",
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    non_nan = findall(.!isnan.(results[:, 3]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 3; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    push!(curves, Dict(
-        "segments" => segments,
-        "legendtitle" => "First information set"
-    ))
-
-    # top ticks
+    # Set up top ticks.
     push!(topticks, Dict(
         "xpos" => round(u₄ - u₃, digits = 2),
         "ypos" => round(results[findall(results[:,:α] .== u₄ - u₃), 5][1], digits = 5),
@@ -1116,7 +887,7 @@ function late_information(
         "label" => "\$\\text{LATE}_{2 \\rightarrow 4}\$"
     ))
 
-    # xpos and xlabel
+    # Set up `xpos` and `xlabel`.
     xpos = Vector()
     xlabel = Vector()
     for tick in topticks
@@ -1129,14 +900,12 @@ function late_information(
     # create tex file
     templatefn = joinpath(savedir, project, "tikz-template-late-bounds.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
-    tex = render(
-        template;
-        topticks = topticks,
-        curves = curves,
-        xpos = xpos,
-        xlabel = xlabel,
-        cycleshift = 2
-    )
+    tex = render(template;
+                 topticks = topticks,
+                 curves = curves,
+                 xpos = xpos,
+                 xlabel = xlabel,
+                 cycleshift = 2)
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
         write(file, tex)
@@ -1145,28 +914,42 @@ function late_information(
 end
 
 # Plot LATE bounds under different assumptions
-function late_assumptions(
-    savedir::String,
-    filename::String;
-    dgp::DGP
-)
-    # initialize
-    topticks = Vector{Dict}()
-    curves = Vector{Dict}()
 
-    # setup
+"""
+    late_assumptions(savedir::String, filename::String)
+
+This function produces the tex file used to create Figure 11 in MT (2018).
+It can't be used to create other/similar figures.
+The file path of this tex file will be returned.
+
+This function extrapolates and plots the sharp bounds for LATE⁺₂₃(α)
+under increasingly restrictive assumptions on the MTRs:
+    1. Nonparametric
+    2. Nonparametric, decreasing
+    3. 9th degree polynomial, decreasing
+
+# Parameters
+
+- savedir: directory where the tex file will be stored
+- filename: name of the tex file
+"""
+function late_assumptions(savedir::String, filename::String)
+    # Initialize Mustache.jl variables.
+    topticks = Vector{Dict}() # keep track of information in top x-axis
+    curves = Vector{Dict}()   # keep track of different LATE curves
+
+    # Setup
+    dgp = dgp_review()
     u₁ = dgp.pscore[findall(dgp.suppZ .== 1)][1]
     u₂ = dgp.pscore[findall(dgp.suppZ .== 2)][1]
     u₃ = dgp.pscore[findall(dgp.suppZ .== 3)][1]
     u₄ = dgp.pscore[findall(dgp.suppZ .== 4)][1]
-
     nondecr = Dict{Symbol, Any}(:lb => 0, :ub => 1, :saturated => true)
     decr = copy(nondecr)
     decr[:decreasing_level] = [(1, 0), (1, 1)]
-
     k9 = [(bernstein_basis(9), bernstein_basis(9))]
 
-    # get data
+    # Get data to produce plots.
     α = collect(0:0.01:0.52)
     push!(α, u₄ - u₃)
     sort!(unique!(α))
@@ -1177,9 +960,8 @@ function late_assumptions(
     results[:, "LB: NP, decr"] .= NaN
     results[:, "UB: K = 9, decr"] .= NaN
     results[:, "LB: K = 9, decr"] .= NaN
-
+    lower = u₂
     for row in 1:nrow(results)
-        lower = u₂
         upper = u₃ + results[row, :α]
         tp = late(dgp, lower, upper)
         if (0 < lower < 1) & (0 < upper < 1)
@@ -1197,85 +979,37 @@ function late_assumptions(
         end
     end
 
-    # nonparametric
-    segments = Vector{Dict}()
-    non_nan = findall(.!isnan.(results[:, 2]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 2; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => "forget plot",
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
+    # Update `curves` with legend title and segment-specific information.
+    function update_curves(ubindex, lbindex, legendtitle)
+        segments = Vector{Dict}()
+        non_nan = findall(.!isnan.(results[:, ubindex]))
+        coordinates = df_to_coordinates(results[non_nan, :], :α, ubindex; disctol = Inf)
+        for i in 1:length(coordinates)
+            segment = Dict("opts" => "forget plot",
+                           "coordinates" => coordinates[i])
+            push!(segments, segment)
+        end
+        non_nan = findall(.!isnan.(results[:, lbindex]))
+        coordinates = df_to_coordinates(results[non_nan, :], :α, lbindex; disctol = Inf)
+        for i in 1:length(coordinates)
+            opts = ifelse(i == length(coordinates), "", "forget plot")
+            segment = Dict("opts" => opts,
+                           "coordinates" => coordinates[i])
+            push!(segments, segment)
+        end
+        push!(curves,
+              Dict("segments" => segments, "legendtitle" => legendtitle))
     end
-    non_nan = findall(.!isnan.(results[:, 3]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 3; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    push!(curves, Dict(
-        "segments" => segments,
-        "legendtitle" => "Nonparametric"
-    ))
+    update_curves(2, 3, "Nonparametric")
+    update_curves(4, 5, "Nonparametric, decreasing")
+    update_curves(6, 7, "Ninth-degree polynomial, decreasing")
 
-    # nonparametric, decreasing
-    segments = Vector{Dict}()
-    non_nan = findall(.!isnan.(results[:, 4]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 4; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => "forget plot",
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    non_nan = findall(.!isnan.(results[:, 5]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 5; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    push!(curves, Dict(
-        "segments" => segments,
-        "legendtitle" => "Nonparametric, decreasing"
-    ))
-
-    # 9th degree, decreasing
-    segments = Vector{Dict}()
-    non_nan = findall(.!isnan.(results[:, 6]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 6; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => "forget plot",
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    non_nan = findall(.!isnan.(results[:, 7]))
-    coordinates = df_to_coordinates(results[non_nan, :], :α, 7; tol = Inf)
-    for coordinate_idx in 1:length(coordinates)
-        segment = Dict(
-            "opts" => ifelse(coordinate_idx == length(coordinates), "", "forget plot"),
-            "coordinates" => coordinates[coordinate_idx]
-        )
-        push!(segments, segment)
-    end
-    push!(curves, Dict(
-        "segments" => segments,
-        "legendtitle" => "Ninth-degree polynomial, decreasing"
-    ))
-
-    # top ticks
+    # Set up top ticks.
+    xpos = round(u₄ - u₃, digits = 2)
+    ypos = round(results[findall(results[:,:α] .== u₄ - u₃), 5][1], digits = 5)
     push!(topticks, Dict(
-        "xpos" => round(u₄ - u₃, digits = 2),
-        "ypos" => round(results[findall(results[:,:α] .== u₄ - u₃), 5][1], digits = 5),
+        "xpos" => xpos,
+        "ypos" => ypos,
         "xlabel" => "\$p(4) - p(3)\$",
         "nodelabel" => "late24",
         "xlabelpos" => 0.15,
@@ -1284,7 +1018,7 @@ function late_assumptions(
         "bendopts" => "[bend left=10]"
     ))
 
-    # xpos and xlabel
+    # Set up `xpos` and `xlabel`.
     xpos = Vector()
     xlabel = Vector()
     for tick in topticks
@@ -1294,17 +1028,15 @@ function late_assumptions(
     xpos = join(xpos, ",")
     xlabel = join(xlabel, ",")
 
-    # create tex file
+    # Create tex file.
     templatefn = joinpath(savedir, project, "tikz-template-late-bounds.tex")
     template = Mustache.load(templatefn, ("<<", ">>"))
-    tex = render(
-        template;
-        topticks = topticks,
-        curves = curves,
-        xpos = xpos,
-        xlabel = xlabel,
-        cycleshift = 0
-    )
+    tex = render(template;
+                 topticks = topticks,
+                 curves = curves,
+                 xpos = xpos,
+                 xlabel = xlabel,
+                 cycleshift = 0)
     texfn = joinpath(dirname(templatefn), filename * ".tex")
     open(texfn, "w") do file
         write(file, tex)
@@ -1312,148 +1044,3 @@ function late_assumptions(
     return texfn
 end
 
-# Plot bounds for different polynomial degrees
-function kbounds(
-    savedir::String,
-    filename::String;
-    dgp::DGP
-)
-    # initialize
-    curves = Vector{Dict}()
-
-    # setup
-    nondecr = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => false,
-        :ivslope => true,
-        :tslsslopeind => true
-    )
-    decr = copy(nondecr)
-    decr[:decreasing_level] = [(1, 0), (1, 1)]
-
-    # ypos
-    tp = att(dgp)
-    bases = [(bernstein_basis(2), bernstein_basis(2))]
-    assumptions = Dict{Symbol, Any}(
-        :lb => 0,
-        :ub => 1,
-        :saturated => true,
-    )
-    r = compute_bounds(tp, bases, assumptions, dgp)
-    ypos = round(r[:lb], digits = 4)
-
-    # get data
-    results = DataFrame(degree = 1:1:19)
-    results[:, "LB Polynomial"] .= NaN
-    results[:, "UB Polynomial"] .= NaN
-    results[:, "LB Nonparametric"] .= NaN
-    results[:, "UB Nonparametric"] .= NaN
-    results[:, "LB Polynomial, Decreasing"] .= NaN
-    results[:, "UB Polynomial, Decreasing"] .= NaN
-    results[:, "LB Nonparametric, Decreasing"] .= NaN
-    results[:, "UB Nonparametric, Decreasing"] .= NaN
-    for row in 1:nrow(results)
-        bases = [(bernstein_basis(results[row, :degree]),
-                  bernstein_basis(results[row, :degree]))]
-        r = compute_bounds(tp, bases, nondecr, dgp)
-        results[row, 2:3] = [r[:lb], r[:ub]]
-        r = compute_bounds(tp, bases, decr, dgp)
-        results[row, 6:7] = [r[:lb], r[:ub]]
-
-        knots = vcat(0, 1, dgp.pscore)
-        bases = [(constantspline_basis(knots),
-                  constantspline_basis(knots))]
-        r = compute_bounds(tp, bases, nondecr, dgp)
-        results[row, 4:5] = [r[:lb], r[:ub]]
-        r = compute_bounds(tp, bases, decr, dgp)
-        results[row, 8:9] = [r[:lb], r[:ub]]
-    end
-
-    # Polynomial
-    poly_lb = df_to_coordinates(results, :degree, 2; tol = Inf)
-    for coordinate_idx in 1:length(poly_lb)
-        push!(curves, Dict(
-            "opts" => "+[forget plot]",
-            "coordinates" => poly_lb[coordinate_idx]
-        ))
-    end
-    poly_ub = df_to_coordinates(results, :degree, 3; tol = Inf)
-    for coordinate_idx in 1:length(poly_ub)
-        push!(curves, Dict(
-            "opts" => "",
-            "coordinates" => poly_ub[coordinate_idx],
-            "shift" => -1
-        ))
-    end
-
-    # Nonparametric
-    np_lb = df_to_coordinates(results, :degree, 4; tol = Inf)
-    for coordinate_idx in 1:length(np_lb)
-        push!(curves, Dict(
-            "opts" => "+[dashed, forget plot]",
-            "coordinates" => np_lb[coordinate_idx]
-        ))
-    end
-    np_ub = df_to_coordinates(results, :degree, 5; tol = Inf)
-    for coordinate_idx in 1:length(np_ub)
-        push!(curves, Dict(
-            "opts" => "+[dashed]",
-            "coordinates" => np_ub[coordinate_idx]
-        ))
-    end
-
-    # Polynomial, Decreasing
-    poly_lb_decr = df_to_coordinates(results, :degree, 6; tol = Inf)
-    for coordinate_idx in 1:length(poly_lb_decr)
-        push!(curves, Dict(
-            "opts" => "+[forget plot]",
-            "coordinates" => poly_lb_decr[coordinate_idx]
-        ))
-    end
-    poly_ub_decr = df_to_coordinates(results, :degree, 7; tol = Inf)
-    for coordinate_idx in 1:length(poly_ub_decr)
-        push!(curves, Dict(
-            "opts" => "",
-            "coordinates" => poly_ub_decr[coordinate_idx],
-            "shift" => -2
-        ))
-    end
-
-    # Nonparametric, Decreasing
-    np_lb_decr = df_to_coordinates(results, :degree, 8; tol = Inf)
-    for coordinate_idx in 1:length(np_lb_decr)
-        push!(curves, Dict(
-            "opts" => "+[dashed, forget plot]",
-            "coordinates" => np_lb_decr[coordinate_idx]
-        ))
-    end
-    np_ub_decr = df_to_coordinates(results, :degree, 9; tol = Inf)
-    for coordinate_idx in 1:length(np_ub_decr)
-        push!(curves, Dict(
-            "opts" => "+[dashed]",
-            "coordinates" => np_ub_decr[coordinate_idx]
-        ))
-    end
-
-    # Truth
-    push!(curves, Dict(
-        "opts" => "[dotted, mark=star, forget plot]",
-        "coordinates" => join("(" .* string.(collect(1:1:19)) .* ", $ypos)")
-    ))
-
-    # create tex file
-    templatefn = joinpath(savedir, project, "tikz-template-kbounds.tex")
-    template = Mustache.load(templatefn, ("<<", ">>"))
-    tex = render(
-        template;
-        curves = curves,
-        ypos = ypos,
-        ylabel = "ATT"
-    )
-    texfn = joinpath(dirname(templatefn), filename * ".tex")
-    open(texfn, "w") do file
-        write(file, tex)
-    end
-    return texfn
-end

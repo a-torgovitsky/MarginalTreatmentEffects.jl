@@ -89,7 +89,7 @@ function df_to_coordinates(df::DataFrame,
                 right = x[i + 1]
             end
             grid = round.(range(left, right, step = steps), digits = 3)
-            unique!(push!(grid, ub)) # ensure that upper is in grid
+            unique!(push!(grid, right)) # ensure that upper is in grid
             for point_idx in 1:length(grid)
                 coordinates = coordinates * "(" *
                     string(grid[point_idx]) * "," *
@@ -110,8 +110,12 @@ function legendtitle(tp::TargetParameter)
         lb = tp.int_limits(1)[1]
         ub = tp.int_limits(1)[2]
         title = "LATE(\$ $(@sprintf("%.2f", lb)), $(@sprintf("%.2f", ub)) \$)"
+    elseif tp.name == "ATE"
+        title = "ATE"
     elseif tp.name == "ATT"
         title = "ATT"
+    elseif tp.name == "ATU"
+        title = "ATU"
     else
         @error "Legend title for target parameter is not supported." tp.name
     end
@@ -170,7 +174,7 @@ function pathtitle(ivlike::IVLike)
     elseif occursin("Wald", ivlike.name)
         title = "wald"
     elseif ivlike.name == "Saturated"
-        title = "saturated" .* string(collect(1:length(ivlike.s)))
+        title = "saturated" .* string.(collect(1:length(ivlike.s)))
     else
         @error "Path title for IV-like estimand is not supported." tp.name
     end

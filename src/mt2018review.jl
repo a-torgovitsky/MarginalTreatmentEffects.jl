@@ -50,8 +50,7 @@ end
 
 # DGP MTRs and MTE (Figure 1)
 function run_tikz_mtr(savedir::String, compile::Bool = false)
-    dgp = dgp_review()
-    texfn = mtr_mte(savedir, "tikz-mtr"; dgp = dgp)
+    texfn = mtr_mte(savedir, "tikz-mtr")
     if compile
         compile_latex(texfn)
     end
@@ -59,8 +58,7 @@ end
 
 # Weights for Conventional Target Parameters (Figure 2)
 function run_tikz_weights(savedir::String, compile::Bool = false)
-    dgp = dgp_review()
-    texfn = conventional_weights(savedir, "tikz-weights"; dgp = dgp)
+    texfn = conventional_weights(savedir, "tikz-weights")
     if compile
         compile_latex(texfn)
     end
@@ -68,8 +66,7 @@ end
 
 # LATE Extrapolation (Figure 3)
 function run_tikz_late_extrap(savedir::String, compile::Bool = false)
-    dgp = dgp_review()
-    texfn = late_extrap(savedir, "tikz-late-extrap"; dgp = dgp)
+    texfn = late_extrap(savedir, "tikz-late-extrap")
     if compile
         compile_latex(texfn)
     end
@@ -230,8 +227,7 @@ end
 
 # LATE Bounds w/ Different Information Sets (Figure 10)
 function run_late_bounds_information(savedir::String, compile::Bool = false)
-    dgp = dgp_review()
-    texfn = late_information(savedir, "late-bounds-information"; dgp = dgp)
+    texfn = late_information(savedir, "late-bounds-information")
     if compile
         compile_latex(texfn)
     end
@@ -239,8 +235,7 @@ end
 
 # LATE Bounds w/ Different MTR Assumptions (Figure 11)
 function run_late_bounds_assumptions(savedir::String, compile::Bool = false)
-    dgp = dgp_review()
-    texfn = late_assumptions(savedir, "late-bounds-assumptions"; dgp = dgp)
+    texfn = late_assumptions(savedir, "late-bounds-assumptions")
     if compile
         compile_latex(texfn)
     end
