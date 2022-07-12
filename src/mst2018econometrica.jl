@@ -127,7 +127,7 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
     assumptions = Dict{Symbol, Any}(:lb => 0,
                                     :ub => 1,
                                     :saturated => false,
-                                    :ivslopeind => [2, 3],)
+                                    :ivslopeind => [1, 2])
 
     # The MTRs that achieve the upper and lower bounds on the target parameter
     # need not be unique. As a result, the plot of the maximizing MTRs may be
