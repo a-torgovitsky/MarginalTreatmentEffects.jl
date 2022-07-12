@@ -589,14 +589,11 @@ function late_extrap(savedir::String, filename::String)
     update_curves(6, "\$\\text{LATE}^{\\pm}_{2 \\rightarrow 3}(\\alpha)\$")
 
     # Set up top ticks.
-    # FIX: in the original figure, the xlabel is p(1) - p(2), but it should be
-    # p(2) - p(1). For now, I am making the mistake in the original figure.
-    # Q(a-torgovitsky): should I fix this mistake?
     xpos = round(u₂ - u₁, digits = 2)
     ypos = round(results[findall(results[:,:α] .== u₂ - u₁), 2][1], digits = 4)
     late₁₃ = Dict("xpos" => xpos,
                   "ypos" => ypos,
-                  "xlabel" => "\$p(1) - p(2)\$",
+                  "xlabel" => "\$p(2) - p(1)\$",
                   "nodelabel" => "late13",
                   "xlabelpos" => .09,
                   "ylabelpos" => -.37,

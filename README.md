@@ -39,3 +39,7 @@ machines.
 ### MST (2018, Econometrica)
 
 - Figure 7: The title was changed from "Order 9 polynomial bounds" to "9th degree polynomial bounds".
+
+### MT (2018, Annual Review of Economics)
+
+- Figure 3: The label on the top tick of Figure 3 was changed from $p(1) - p(2)$ to $p(2) - p(1)$.
