@@ -250,8 +250,7 @@ function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
                                     :saturated => true,
                                     :decreasing_level => [(1, 0), (1, 1)])
     opts = defaults_econometrica()
-    # FIX: Order is 10, but degree is 9!
-    opts[1][:title] = "Order 9 polynomial bounds, MTRs decreasing"
+    opts[1][:title] = "9th degree polynomial bounds, MTRs decreasing"
     texfn = mtrs_and_weights(savedir,
                              "np-sharp-decr-k9";
                              dgp = dgp,

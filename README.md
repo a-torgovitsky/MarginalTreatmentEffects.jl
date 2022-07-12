@@ -33,3 +33,9 @@ The solution to the linear programs in MST (2018) and MT (2018) need not be
 unique. While the bounds on the target parameters shouldn't change, the MTRs
 that achieve these bounds may be different when running the code on different
 machines.
+
+## Errata
+
+### MST (2018, Econometrica)
+
+- Figure 7: The title was changed from "Order 9 polynomial bounds" to "9th degree polynomial bounds".
