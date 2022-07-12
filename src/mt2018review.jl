@@ -1,10 +1,10 @@
 # Produce DGP for MT (2018).
 function dgp_review()
-    DGP(suppZ = reshape([1, 2, 3, 4], :, 1), # reshape returns 2-dim object
-        densZ = [0.25, 0.25, 0.25, 0.25],
-        pscore = [0.12, 0.29, 0.48, 0.78],
-        mtrs = (MTR(bernstein_basis(2), hcat(0.9, 0.35, 0.1)),
-                MTR(bernstein_basis(2), hcat(0.35, 0.2, 0))))
+    return DGP(suppZ = reshape([1, 2, 3, 4], :, 1),
+               densZ = [0.25, 0.25, 0.25, 0.25],
+               pscore = [0.12, 0.29, 0.48, 0.78],
+               mtrs = (MTR(bernstein_basis(2), hcat(0.9, 0.35, 0.1)),
+                       MTR(bernstein_basis(2), hcat(0.35, 0.2, 0))))
 end
 
 # Produce default aesthetics for MT (2018).

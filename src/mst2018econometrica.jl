@@ -1,6 +1,6 @@
 # Produce DGP for MST (2018).
 function dgp_econometrica()
-    return DGP(suppZ = reshape([0, 1, 2], :, 1), # reshape returns 2-dim object
+    return DGP(suppZ = reshape([0, 1, 2], :, 1),
                densZ = [0.5, 0.4, 0.1],
                pscore = [0.35, 0.6, 0.7],
                mtrs = (MTR(bernstein_basis(2), hcat(0.6, 0.4, 0.3)),
