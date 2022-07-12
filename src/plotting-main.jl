@@ -6,7 +6,11 @@
                      bases::Vector{Tuple{MTRBasis, MTRBasis}},
                      assumptions::Dict,
                      mtroption::String,
-                     opts::Tuple{Dict, Vector{String}, Vector{String}, Vector{String}, Vector{String}},
+                     opts::Tuple{Dict,
+                                 Vector{String},
+                                 Vector{String},
+                                 Vector{String},
+                                 Vector{String}},
                      attributes::Dict = Dict("LogLevel" => 0),
                      startdf::DataFrame= DataFrame(ℓ = Int64[],
                                                    d = Int64[],
@@ -852,14 +856,20 @@ function late_information(savedir::String, filename::String)
     function update_curves(ubindex, lbindex, legendtitle)
         segments = Vector{Dict}()
         non_nan = findall(.!isnan.(results[:, ubindex]))
-        coordinates = df_to_coordinates(results[non_nan, :], :α, ubindex; disctol = Inf)
+        coordinates = df_to_coordinates(results[non_nan, :],
+                                        :α,
+                                        ubindex;
+                                        disctol = Inf)
         for i in 1:length(coordinates)
             segment = Dict("opts" => "forget plot",
                            "coordinates" => coordinates[i])
             push!(segments, segment)
         end
         non_nan = findall(.!isnan.(results[:, lbindex]))
-        coordinates = df_to_coordinates(results[non_nan, :], :α, lbindex; disctol = Inf)
+        coordinates = df_to_coordinates(results[non_nan, :],
+                                        :α,
+                                        lbindex;
+                                        disctol = Inf)
         for i in 1:length(coordinates)
             opts = ifelse(i == length(coordinates), "", "forget plot")
             segment = Dict("opts" => opts,
@@ -876,7 +886,8 @@ function late_information(savedir::String, filename::String)
     # Set up top ticks.
     push!(topticks, Dict(
         "xpos" => round(u₄ - u₃, digits = 2),
-        "ypos" => round(results[findall(results[:,:α] .== u₄ - u₃), 5][1], digits = 5),
+        "ypos" => round(results[findall(results[:,:α] .== u₄ - u₃), 5][1],
+                        digits = 5),
         "xlabel" => "\$p(4) - p(3)\$",
         "nodelabel" => "late24",
         "xlabelpos" => 0.15,
@@ -980,14 +991,20 @@ function late_assumptions(savedir::String, filename::String)
     function update_curves(ubindex, lbindex, legendtitle)
         segments = Vector{Dict}()
         non_nan = findall(.!isnan.(results[:, ubindex]))
-        coordinates = df_to_coordinates(results[non_nan, :], :α, ubindex; disctol = Inf)
+        coordinates = df_to_coordinates(results[non_nan, :],
+                                        :α,
+                                        ubindex;
+                                        disctol = Inf)
         for i in 1:length(coordinates)
             segment = Dict("opts" => "forget plot",
                            "coordinates" => coordinates[i])
             push!(segments, segment)
         end
         non_nan = findall(.!isnan.(results[:, lbindex]))
-        coordinates = df_to_coordinates(results[non_nan, :], :α, lbindex; disctol = Inf)
+        coordinates = df_to_coordinates(results[non_nan, :],
+                                        :α,
+                                        lbindex;
+                                        disctol = Inf)
         for i in 1:length(coordinates)
             opts = ifelse(i == length(coordinates), "", "forget plot")
             segment = Dict("opts" => opts,
@@ -1040,4 +1057,3 @@ function late_assumptions(savedir::String, filename::String)
     end
     return texfn
 end
-
