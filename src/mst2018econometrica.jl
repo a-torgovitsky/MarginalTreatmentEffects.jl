@@ -45,7 +45,7 @@ function defaults_econometrica()
 end
 
 # DGP MTRs and Weights for LATE and IV Slope (Figure 1)
-function run_np_ivs_notitle(savedir::String, compile::Bool = false)
+function run_np_ivs_notitle(savedir::String)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
     bases = [(constantspline_basis(knots), constantspline_basis(knots))]
@@ -55,21 +55,18 @@ function run_np_ivs_notitle(savedir::String, compile::Bool = false)
                                     :ivslope => true)
     opts = defaults_econometrica()
     opts[1][:title] = "~" # no title
-    texfn = mtrs_and_weights(savedir,
-                             "np-ivs-no-title";
-                              dgp = dgp,
-                              tp = late(dgp, 0.35, 0.9),
-                              bases = bases,
-                              assumptions = assumptions,
-                              mtroption = "truth",
-                              opts = opts)
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "np-ivs-no-title";
+                             dgp = dgp,
+                             tp = late(dgp, 0.35, 0.9),
+                             bases = bases,
+                             assumptions = assumptions,
+                             mtroption = "truth",
+                             opts = opts)
 end
 
 # LATE Bounds w/ IV Slope (Figure 2)
-function run_np_ivs(savedir::String, compile::Bool = false)
+function run_np_ivs(savedir::String)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
     bases = [(constantspline_basis(knots), constantspline_basis(knots))]
@@ -79,23 +76,20 @@ function run_np_ivs(savedir::String, compile::Bool = false)
                                     :ivslope => true)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
-    texfn = mtrs_and_weights(savedir,
-                             "np-ivs";
-                             dgp = dgp,
-                             tp = late(dgp, 0.35, 0.9),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts,
-                             attributes = Dict("LogLevel" => 0,
-                                               "SolveType" => 1))
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "np-ivs";
+                            dgp = dgp,
+                            tp = late(dgp, 0.35, 0.9),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts,
+                            attributes = Dict("LogLevel" => 0,
+                                              "SolveType" => 1))
 end
 
 # LATE Bounds w/ IV & OLS Slopes (Figure 3)
-function run_np_ivs_olss(savedir::String, compile::Bool = false)
+function run_np_ivs_olss(savedir::String)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
     bases = [(constantspline_basis(knots), constantspline_basis(knots))]
@@ -106,21 +100,18 @@ function run_np_ivs_olss(savedir::String, compile::Bool = false)
                                     :olsslope => true,)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
-    texfn = mtrs_and_weights(savedir,
-                             "np-ivs-olss";
-                             dgp = dgp,
-                             tp = late(dgp, 0.35, 0.9),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts)
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "np-ivs-olss";
+                            dgp = dgp,
+                            tp = late(dgp, 0.35, 0.9),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts)
 end
 
 # LATE Bounds w/ Nonparametric IV Slopes (Figure 4)
-function run_np_ivnps(savedir::String, compile::Bool = false)
+function run_np_ivnps(savedir::String)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
     bases = [(constantspline_basis(knots), constantspline_basis(knots))]
@@ -154,8 +145,24 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
     # version 1: no additional constraints
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
-    texfn, v1lb, v1ub = mtrs_and_weights(savedir,
-                                         "np-ivnps-v1";
+    texfn1, v1lb, v1ub = mtrs_and_weights(savedir,
+                                          "np-ivnps-v1";
+                                           dgp = dgp,
+                                           tp = late(dgp, 0.35, 0.9),
+                                           bases = bases,
+                                           assumptions = assumptions,
+                                           mtroption = "max",
+                                           opts = opts,
+                                           attributes = Dict("LogLevel" => 0,
+                                                             "SolveType" => 1),
+                                           return_bounds = true)
+
+    # version 2: add constraint to match original Figure 4
+    opts = defaults_econometrica()
+    opts[1][:title] = "Nonparametric bounds"
+    fixdf = DataFrame(ℓ = 1, d = 1, j = 1, k = 1, fix = 1.0)
+    texfn2, v2lb, v2ub = mtrs_and_weights(savedir,
+                                          "np-ivnps-v2";
                                           dgp = dgp,
                                           tp = late(dgp, 0.35, 0.9),
                                           bases = bases,
@@ -164,38 +171,18 @@ function run_np_ivnps(savedir::String, compile::Bool = false)
                                           opts = opts,
                                           attributes = Dict("LogLevel" => 0,
                                                             "SolveType" => 1),
+                                          fixdf = fixdf,
                                           return_bounds = true)
-    if compile
-        compile_latex(texfn)
-    end
-
-    # version 2: add constraint to match original Figure 4
-    opts = defaults_econometrica()
-    opts[1][:title] = "Nonparametric bounds"
-    fixdf = DataFrame(ℓ = 1, d = 1, j = 1, k = 1, fix = 1.0)
-    texfn, v2lb, v2ub = mtrs_and_weights(savedir,
-                                         "np-ivnps-v2";
-                                         dgp = dgp,
-                                         tp = late(dgp, 0.35, 0.9),
-                                         bases = bases,
-                                         assumptions = assumptions,
-                                         mtroption = "max",
-                                         opts = opts,
-                                         attributes = Dict("LogLevel" => 0,
-                                                           "SolveType" => 1),
-                                         fixdf = fixdf,
-                                         return_bounds = true)
-    if compile
-        compile_latex(texfn)
-    end
 
     # The two versions produce the same upper and lower bounds.
     @assert v1lb == v2lb
     @assert v1ub == v2ub
+
+    return texfn1, texfn2
 end
 
 # Sharp LATE Bounds (Figure 5)
-function run_np_sharp(savedir::String, compile::Bool = false)
+function run_np_sharp(savedir::String)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
     bases = [(constantspline_basis(knots), constantspline_basis(knots))]
@@ -204,21 +191,18 @@ function run_np_sharp(savedir::String, compile::Bool = false)
                                     :saturated => true)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
-    texfn = mtrs_and_weights(savedir,
-                             "np-sharp";
-                             dgp = dgp,
-                             tp = late(dgp, 0.35, 0.9),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts)
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "np-sharp";
+                            dgp = dgp,
+                            tp = late(dgp, 0.35, 0.9),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts)
 end
 
 # Sharp LATE Bounds w/ Decr. MTRs (Figure 6)
-function run_np_sharp_decr(savedir::String, compile::Bool = false)
+function run_np_sharp_decr(savedir::String)
     dgp = dgp_econometrica()
     knots = vcat(0, 1, dgp.pscore, 0.35, 0.9)
     bases = [(constantspline_basis(knots), constantspline_basis(knots))]
@@ -228,21 +212,18 @@ function run_np_sharp_decr(savedir::String, compile::Bool = false)
                                     :decreasing_level => [(1, 0), (1, 1)])
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds, MTRs decreasing"
-    texfn = mtrs_and_weights(savedir,
-                             "np-sharp-decr";
-                             dgp = dgp,
-                             tp = late(dgp, 0.35, 0.9),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts)
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "np-sharp-decr";
+                            dgp = dgp,
+                            tp = late(dgp, 0.35, 0.9),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts)
 end
 
 # Sharp LATE Bounds w/ Decr., 9th degree MTRs (Figure 7)
-function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
+function run_np_sharp_decr_k9(savedir::String)
     dgp = dgp_econometrica()
     bases = [(bernstein_basis(9), bernstein_basis(9))]
     assumptions = Dict{Symbol, Any}(:lb => 0,
@@ -251,23 +232,17 @@ function run_np_sharp_decr_k9(savedir::String, compile::Bool = false)
                                     :decreasing_level => [(1, 0), (1, 1)])
     opts = defaults_econometrica()
     opts[1][:title] = "9th degree polynomial bounds, MTRs decreasing"
-    texfn = mtrs_and_weights(savedir,
-                             "np-sharp-decr-k9";
-                             dgp = dgp,
-                             tp = late(dgp, 0.35, 0.9),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts)
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "np-sharp-decr-k9";
+                            dgp = dgp,
+                            tp = late(dgp, 0.35, 0.9),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts)
 end
 
 # Bounds on Family of PRTEs (Figure 8)
-function run_tikz_extrapolate(savedir::String, compile::Bool = false)
-    texfn = tikz_extrapolate(savedir, "tikz-extrapolate")
-    if compile
-        compile_latex(texfn)
-    end
+function run_tikz_extrapolate(savedir::String)
+    return tikz_extrapolate(savedir, "tikz-extrapolate")
 end

@@ -45,94 +45,106 @@ function menu(savelocation::String = "."; compile::Bool = false)
     figure_choice = readline()
     figure_choice = parse(Int64, figure_choice)
 
+    global texfiles = Vector{String}() # store path of tex files
+
     if project_choice == 1
         if figure_choice == 1
             savedir, _ = setup(savelocation, stub = "np-ivs-no-title")
-            run_np_ivs_notitle(savedir, compile)
+            push!(texfiles, run_np_ivs_notitle(savedir))
         elseif figure_choice == 2
             savedir, _ = setup(savelocation, stub = "np-ivs")
-            run_np_ivs(savedir, compile)
+            push!(texfiles, run_np_ivs(savedir))
         elseif figure_choice == 3
             savedir, _ = setup(savelocation, stub = "np-ivs-olss")
-            run_np_ivs_olss(savedir, compile)
+            push!(texfiles, run_np_ivs_olss(savedir))
         elseif figure_choice == 4
+            # We produce 2 figures here.
+            # See the note in the source code for `run_np_ivnps()`, which can
+            # be found in `src/mst2018econometrica.jl`.
             savedir, _ = setup(savelocation, stub = "np-ivnps")
-            run_np_ivnps(savedir, compile)
+            push!(texfiles, run_np_ivnps(savedir)...)
         elseif figure_choice == 5
             savedir, _ = setup(savelocation, stub = "np-sharp")
-            run_np_sharp(savedir, compile)
+            push!(texfiles, run_np_sharp(savedir))
         elseif figure_choice == 6
             savedir, _ = setup(savelocation, stub = "np-sharp-decr")
-            run_np_sharp_decr(savedir, compile)
+            push!(texfiles, run_np_sharp_decr(savedir))
         elseif figure_choice == 7
             # NOTE: in appendix, K refers to degree, not order
             savedir, _ = setup(savelocation, stub = "np-sharp-decr-k9")
-            run_np_sharp_decr_k9(savedir, compile)
+            push!(texfiles, run_np_sharp_decr_k9(savedir))
         elseif figure_choice == 8
             savedir, _ = setup(savelocation, stub = "tikz-extrapolate")
-            run_tikz_extrapolate(savedir, compile)
+            push!(texfiles, run_tikz_extrapolate(savedir))
         elseif figure_choice == 0
             savedir, _ = setup(savelocation, stub = "everything")
-            run_np_ivs_notitle(savedir, compile)
-            run_np_ivs(savedir, compile)
-            run_np_ivs_olss(savedir, compile)
-            run_np_ivnps(savedir, compile)
-            run_np_sharp(savedir, compile)
-            run_np_sharp_decr(savedir, compile)
-            run_np_sharp_decr_k9(savedir, compile)
-            run_tikz_extrapolate(savedir, compile)
+            push!(texfiles, run_np_ivs_notitle(savedir))
+            push!(texfiles, run_np_ivs(savedir))
+            push!(texfiles, run_np_ivs_olss(savedir))
+            push!(texfiles, run_np_ivnps(savedir)...)
+            push!(texfiles, run_np_sharp(savedir))
+            push!(texfiles, run_np_sharp_decr(savedir))
+            push!(texfiles, run_np_sharp_decr_k9(savedir))
+            push!(texfiles, run_tikz_extrapolate(savedir))
         else
             @error "ERROR: invalid choice" project_choice figure_choice
         end
     elseif project_choice == 2
         if figure_choice == 1
             savedir, _ = setup(savelocation, stub = "tikz-mtr")
-            run_tikz_mtr(savedir, compile)
+            push!(texfiles, run_tikz_mtr(savedir))
         elseif figure_choice == 2
             savedir, _ = setup(savelocation, stub = "tikz-weights")
-            run_tikz_weights(savedir, compile)
+            push!(texfiles, run_tikz_weights(savedir))
         elseif figure_choice == 3
             savedir, _ = setup(savelocation, stub = "tikz-late-extrap")
-            run_tikz_late_extrap(savedir, compile)
+            push!(texfiles, run_tikz_late_extrap(savedir))
         elseif figure_choice == 4
             savedir, _ = setup(savelocation, stub = "k4")
-            run_k4(savedir, compile)
+            push!(texfiles, run_k4(savedir))
         elseif figure_choice == 5
             savedir, _ = setup(savelocation, stub = "k9")
-            run_k9(savedir, compile)
+            push!(texfiles, run_k9(savedir))
         elseif figure_choice == 6
             savedir, _ = setup(savelocation, stub = "kbounds")
-            run_kbounds(savedir, compile)
+            push!(texfiles, run_kbounds(savedir))
         elseif figure_choice == 7
             savedir, _ = setup(savelocation, stub = "np")
-            run_np(savedir, compile)
+            push!(texfiles, run_np(savedir))
         elseif figure_choice == 8
             savedir, _ = setup(savelocation, stub = "k9-decr")
-            run_k9_decr(savedir, compile)
+            push!(texfiles, run_k9_decr(savedir))
         elseif figure_choice == 9
             savedir, _ = setup(savelocation, stub = "k9-decr-add-more")
-            run_k9_decr_add_more(savedir, compile)
+            push!(texfiles, run_k9_decr_add_more(savedir))
         elseif figure_choice == 10
             savedir, _ = setup(savelocation, stub = "late-bounds-information")
-            run_late_bounds_information(savedir, compile)
+            push!(texfiles, run_late_bounds_information(savedir))
         elseif figure_choice == 11
             savedir, _ = setup(savelocation, stub = "late-bounds-assumptions")
-            run_late_bounds_assumptions(savedir, compile)
+            push!(texfiles, run_late_bounds_assumptions(savedir))
         elseif figure_choice == 0
             savedir, _ = setup(savelocation, stub = "everything")
-            run_tikz_mtr(savedir, compile)
-            run_tikz_weights(savedir, compile)
-            run_tikz_late_extrap(savedir, compile)
-            run_k4(savedir, compile)
-            run_k9(savedir, compile)
-            run_kbounds(savedir, compile)
-            run_np(savedir, compile)
-            run_k9_decr(savedir, compile)
-            run_k9_decr_add_more(savedir, compile)
-            run_late_bounds_information(savedir, compile)
-            run_late_bounds_assumptions(savedir, compile)
+            push!(texfiles, run_tikz_mtr(savedir))
+            push!(texfiles, run_tikz_weights(savedir))
+            push!(texfiles, run_tikz_late_extrap(savedir))
+            push!(texfiles, run_k4(savedir))
+            push!(texfiles, run_k9(savedir))
+            push!(texfiles, run_kbounds(savedir))
+            push!(texfiles, run_np(savedir))
+            push!(texfiles, run_k9_decr(savedir))
+            push!(texfiles, run_k9_decr_add_more(savedir))
+            push!(texfiles, run_late_bounds_information(savedir))
+            push!(texfiles, run_late_bounds_assumptions(savedir))
         else
             @error "WIP" project_choice figure_choice
+        end
+    end
+
+    # produce PDFs from tex files
+    if compile
+        for texfn in texfiles
+            compile_latex(texfn)
         end
     end
 end

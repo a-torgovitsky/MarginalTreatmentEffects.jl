@@ -45,31 +45,22 @@ function defaults_review()
 end
 
 # DGP MTRs and MTE (Figure 1)
-function run_tikz_mtr(savedir::String, compile::Bool = false)
-    texfn = mtr_mte(savedir, "tikz-mtr")
-    if compile
-        compile_latex(texfn)
-    end
+function run_tikz_mtr(savedir::String)
+    return mtr_mte(savedir, "tikz-mtr")
 end
 
 # Weights for Conventional Target Parameters (Figure 2)
-function run_tikz_weights(savedir::String, compile::Bool = false)
-    texfn = conventional_weights(savedir, "tikz-weights")
-    if compile
-        compile_latex(texfn)
-    end
+function run_tikz_weights(savedir::String)
+    return conventional_weights(savedir, "tikz-weights")
 end
 
 # LATE Extrapolation (Figure 3)
-function run_tikz_late_extrap(savedir::String, compile::Bool = false)
-    texfn = late_extrap(savedir, "tikz-late-extrap")
-    if compile
-        compile_latex(texfn)
-    end
+function run_tikz_late_extrap(savedir::String)
+    return late_extrap(savedir, "tikz-late-extrap")
 end
 
 # ATT Bounds w/ 4th degree MTRs (Figure 4)
-function run_k4(savedir::String, compile::Bool = false)
+function run_k4(savedir::String)
     dgp = dgp_review()
     bases = [(bernstein_basis(4), bernstein_basis(4))]
     assumptions = Dict{Symbol, Any}(:lb => 0,
@@ -80,21 +71,18 @@ function run_k4(savedir::String, compile::Bool = false)
     opts = defaults_review()
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
-    texfn = mtrs_and_weights(savedir,
-                             "k4";
-                             dgp = dgp,
-                             tp = att(dgp),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts)
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "k4";
+                            dgp = dgp,
+                            tp = att(dgp),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts)
 end
 
 # ATT Bounds w/ 9th degree MTRs (Figure 5)
-function run_k9(savedir::String, compile::Bool = false)
+function run_k9(savedir::String)
     dgp = dgp_review()
     bases = [(bernstein_basis(9), bernstein_basis(9))]
     assumptions = Dict{Symbol, Any}(:lb => 0,
@@ -105,30 +93,24 @@ function run_k9(savedir::String, compile::Bool = false)
     opts = defaults_review()
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
-    texfn = mtrs_and_weights(savedir,
-                             "k9";
-                             dgp = dgp,
-                             tp = att(dgp),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts)
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "k9";
+                            dgp = dgp,
+                            tp = att(dgp),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts)
 end
 
 # ATT Bounds w/ Different MTR Assumptions (Figure 6)
-function run_kbounds(savedir::String, compile::Bool = false)
+function run_kbounds(savedir::String)
     dgp = dgp_review()
-    texfn = kbounds(savedir, "kbounds"; dgp = dgp)
-    if compile
-        compile_latex(texfn)
-    end
+    return kbounds(savedir, "kbounds"; dgp = dgp)
 end
 
 # ATT Bounds w/ Nonparametric MTRs (Figure 7)
-function run_np(savedir::String, compile::Bool = false)
+function run_np(savedir::String)
     dgp = dgp_review()
     knots = vcat(0, 1, dgp.pscore)
     bases = [(constantspline_basis(knots), constantspline_basis(knots))];
@@ -140,23 +122,20 @@ function run_np(savedir::String, compile::Bool = false)
     opts = defaults_review()
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
-    texfn = mtrs_and_weights(savedir,
-                             "np";
-                             dgp = dgp,
-                             tp = att(dgp),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts,
-                             attributes = Dict("LogLevel" => 0,
-                                               "SolveType" => 1))
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "np";
+                            dgp = dgp,
+                            tp = att(dgp),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts,
+                            attributes = Dict("LogLevel" => 0,
+                                              "SolveType" => 1))
 end
 
 # ATT Bounds w/ Decr., 9th degree MTRs (Figure 8)
-function run_k9_decr(savedir::String, compile::Bool = false)
+function run_k9_decr(savedir::String)
     dgp = dgp_review()
     bases = [(bernstein_basis(9), bernstein_basis(9))]
     assumptions = Dict{Symbol, Any}(:lb => 0,
@@ -168,21 +147,18 @@ function run_k9_decr(savedir::String, compile::Bool = false)
     opts = defaults_review()
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
-    texfn = mtrs_and_weights(savedir,
-                             "k9-decr";
-                             dgp = dgp,
-                             tp = att(dgp),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts)
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "k9-decr";
+                            dgp = dgp,
+                            tp = att(dgp),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts)
 end
 
 # ATT Bounds w/ more IV-like estimands (Figure 9)
-function run_k9_decr_add_more(savedir::String, compile::Bool = false)
+function run_k9_decr_add_more(savedir::String)
     dgp = dgp_review()
     bases = [(bernstein_basis(9), bernstein_basis(9))]
     assumptions = Dict{Symbol, Any}(:lb => 0,
@@ -196,31 +172,22 @@ function run_k9_decr_add_more(savedir::String, compile::Bool = false)
     opts = defaults_review()
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
-    texfn = mtrs_and_weights(savedir,
-                             "k9-decr-add-more";
-                             dgp = dgp,
-                             tp = att(dgp),
-                             bases = bases,
-                             assumptions = assumptions,
-                             mtroption = "max",
-                             opts = opts)
-    if compile
-        compile_latex(texfn)
-    end
+    return mtrs_and_weights(savedir,
+                            "k9-decr-add-more";
+                            dgp = dgp,
+                            tp = att(dgp),
+                            bases = bases,
+                            assumptions = assumptions,
+                            mtroption = "max",
+                            opts = opts)
 end
 
 # LATE Bounds w/ Different Information Sets (Figure 10)
-function run_late_bounds_information(savedir::String, compile::Bool = false)
-    texfn = late_information(savedir, "late-bounds-information")
-    if compile
-        compile_latex(texfn)
-    end
+function run_late_bounds_information(savedir::String)
+    return late_information(savedir, "late-bounds-information")
 end
 
 # LATE Bounds w/ Different MTR Assumptions (Figure 11)
-function run_late_bounds_assumptions(savedir::String, compile::Bool = false)
-    texfn = late_assumptions(savedir, "late-bounds-assumptions")
-    if compile
-        compile_latex(texfn)
-    end
+function run_late_bounds_assumptions(savedir::String)
+    return late_assumptions(savedir, "late-bounds-assumptions")
 end
