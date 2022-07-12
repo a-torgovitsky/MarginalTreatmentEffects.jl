@@ -36,8 +36,6 @@
 #
 ################################################################################
 
-# Q(a-torgovitsky): should I export `compute_average_weights`?
-
 function compute_average_weights(tp::TargetParameter,
                                  dgp::Union{DGP, Nothing} = nothing)
     if tp.name in ["ATT", "ATU"]
