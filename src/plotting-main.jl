@@ -256,7 +256,7 @@ function mtrs_and_weights(savedir::String,
                 nothing
             )
             update_ivlike_weights(s,
-                                  legendtitle(s_ivlike)[saturated_idx],
+                                  legendtitle(s_ivlike, dgp)[saturated_idx],
                                   pathtitle(s_ivlike)[saturated_idx])
         end
     end

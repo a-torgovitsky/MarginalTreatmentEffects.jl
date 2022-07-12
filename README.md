@@ -41,6 +41,10 @@ machines.
 - Figure 4: The IV Slope entries in the legend correctly uses the support of the instruments:
   - 𝟙(Z = 2) is now 𝟙(Z = 1)
   - 𝟙(Z = 3) is now 𝟙(Z = 2)
+- Figures 5, 6, 7: The entries in the legend correctly use the support of the instruments:
+  - 𝟙(Z = 1) is now 𝟙(Z = 0)
+  - 𝟙(Z = 2) is now 𝟙(Z = 1)
+  - 𝟙(Z = 3) is now 𝟙(Z = 2)
 - Figure 7: The title was changed from "Order 9 polynomial bounds" to "9th degree polynomial bounds".
 
 ### MT (2018, Annual Review of Economics)
