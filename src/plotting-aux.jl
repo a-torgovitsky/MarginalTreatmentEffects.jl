@@ -102,45 +102,11 @@ function df_to_coordinates(df::DataFrame,
 end
 
 # Generate the title used in the legend
-# Q(a-torgovitsky): should this be a property of the TargetParameter struct?
-# If we can't specify default values of these properties, then it might break
-# existing code.
 function legendtitle(tp::TargetParameter)
-    if tp.name == "LATE(u₁, u₂)"
-        lb = tp.int_limits(1)[1]
-        ub = tp.int_limits(1)[2]
-        title = "LATE(\$ $(@sprintf("%.2f", lb)), $(@sprintf("%.2f", ub)) \$)"
-    elseif tp.name == "ATE"
-        title = "ATE"
-    elseif tp.name == "ATT"
-        title = "ATT"
-    elseif tp.name == "ATU"
-        title = "ATU"
-    else
-        @error "Legend title for target parameter is not supported." tp.name
-    end
-    return title
+    return tp.legendtitle
 end
-
-function legendtitle(ivlike::IVLike, dgp::Union{DGP, Nothing} = nothing)
-    title = ivlike.name
-    if occursin("IV Slope for 𝟙(Z == z) for z ∈", ivlike.name)
-        title = Vector{String}()
-        for z in ivlike.params[:support]
-            push!(title, "IV Slope \$(\\mathbb{1}[Z = $z])\$")
-        end
-    end
-    if occursin("TSLS Slope for 𝟙(Z == z) for z ∈", ivlike.name)
-        title = "TSLS Slope"
-    end
-    if ivlike.name == "Saturated"
-        title = Vector{String}()
-        d_string = ["\$(1 - D)\$", "\$D\$"]
-        z_string = "\$\\mathbb{1}[Z = " .* string.(dgp.suppZ) .* "]\$"
-        # NOTE: without [:], `title` would be a matrix
-        title = [d * z for z in z_string, d in d_string][:]
-    end
-    return title
+function legendtitle(ivlike::IVLike)
+    return ivlike.legendtitle[1]
 end
 
 # Generate the title used in TikZ path for cross-referencing

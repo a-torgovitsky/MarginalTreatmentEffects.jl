@@ -17,9 +17,16 @@ struct TargetParameter
     name::String
     int_limits::Function
     int_constant::Function
+    legendtitle::String
 
-    function TargetParameter(name, int_limits, int_constant)
-        new(name, int_limits, int_constant)
+    function TargetParameter(name,
+                             int_limits,
+                             int_constant,
+                             legendtitle = nothing)
+        if isnothing(legendtitle)
+            legendtitle = name
+        end
+        new(name, int_limits, int_constant, legendtitle)
     end
 end
 export TargetParameter
@@ -55,7 +62,8 @@ function ey1(dgp::DGP; ℓ = 1)
     TargetParameter(
         "EY1",
         z -> (0,1),
-        (l,d,z) -> d * (l == ℓ) * find_density(z, dgp)
+        (l,d,z) -> d * (l == ℓ) * find_density(z, dgp),
+        "\$\\mathbb{E}[Y(1)]\$"
     )
 end
 export ey1
@@ -108,7 +116,8 @@ function late(dgp::DGP, u₁, u₂; ℓ = 1)
     TargetParameter(
         "LATE(u₁, u₂)",
         z -> (u₁, u₂),
-        (ℓ, d, z) -> ((1 == ℓ) * (2*d - 1) * find_density(z, dgp) / (u₂ - u₁))
+        (ℓ, d, z) -> ((1 == ℓ) * (2*d - 1) * find_density(z, dgp) / (u₂ - u₁)),
+        "LATE(\$$(@sprintf("%.2f", u₁)), $(@sprintf("%.2f", u₂))\$)",
     )
 end
 export late

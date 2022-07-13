@@ -8,10 +8,14 @@
 struct IVLike
     name::String
     s::Vector
-    params::Any # accomodates `nothing`
+    params::Any
+    legendtitle::Vector{String}
 
-    function IVLike(name, s, params)
-        new(name, s, params)
+    function IVLike(name, s, params, legendtitle = nothing)
+        if isnothing(legendtitle)
+            legendtitle = [name]
+        end
+        new(name, s, params, legendtitle)
     end
 end
 export IVLike
@@ -23,7 +27,13 @@ function make_slist(suppZ)
     name = "Saturated"
     s = [((d,z) -> (d == d̄) * (z == z̄))
             for d̄ in 0:1, z̄ in eachrow(suppZ)][:]
-    IVLike(name, s, nothing)
+
+    d_string = ["\$(1 - D)\$", "\$D\$"]
+    z_string = "\$\\mathbb{1}[Z = " .* string.(suppZ) .* "]\$"
+    # without [:], `title` would be a matrix
+    legendtitle = [d * z for z in z_string, d in d_string][:]
+
+    IVLike(name, s, nothing, legendtitle)
 end
 export make_slist
 
@@ -63,7 +73,11 @@ function ivslope_indicator(dgp::DGP; support::Vector)
     covDZind = i -> expDZind(i) - expD * expZind(i)
     s = [((d,z) -> (((z[1] == dgp.suppZ[i]) - expZind(i)) / covDZind(i)))
          for i in indices][:]
-    IVLike(name, s, Dict(:support => support))
+    legendtitle = Vector{String}()
+    for z in support
+        push!(legendtitle, "IV Slope \$(\\mathbb{1}[Z = $z])\$")
+    end
+    IVLike(name, s, Dict(:support => support), legendtitle)
 end
 export ivslope_indicator
 
@@ -79,20 +93,22 @@ function tslsslope_indicator(dgp::DGP)
     Π = expZX' * inv(expZZ)
     mult = inv(Π * expZX) * Π
     s = [((d,z) -> (mult * [z[1] == zi for zi in dgp.suppZ])[2])][:]
-    IVLike(name, s, nothing)
+    legendtitle = ["TSLS Slope"]
+    IVLike(name, s, nothing, legendtitle)
 end
 export tslsslope_indicator
 
 function wald(dgp::DGP; z₀, z₁)
     @assert size(dgp.suppZ, 2) == 1 # haven't coded other cases
-    name = "Wald (Z = " * string(z₀) * " to Z = " * string(z₁) * ")"
+    name = "Wald (Z = $(string(z₀)) to Z = $(string(z₁)))"
     dens1 = find_density([z₁], dgp)
     dens0 = find_density([z₀], dgp)
     pscore1 = find_pscore([z₁], dgp)
     pscore0 = find_pscore([z₀], dgp)
     denom = pscore1 - pscore0
     s = [((d,z) -> (((z[1] == z₁)/dens1 - (z[1] == z₀)/dens0) / denom))][:]
-    IVLike(name, s, Dict(:z₀ => z₀, :z₁ => z₁))
+    legendtitle = ["Wald (\$Z = $(string(z₀))\$ to \$Z = $(string(z₁))\$)"]
+    IVLike(name, s, Dict(:z₀ => z₀, :z₁ => z₁), legendtitle)
 end
 export wald
 

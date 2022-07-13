@@ -242,10 +242,11 @@ function mtrs_and_weights(savedir::String,
             s = IVLike(
                 "IV Slope for 𝟙(Z = " * string(dgp.suppZ[zind]) * ")",
                 [s_ivlike.s[i]],
-                Dict(:support => [dgp.suppZ[zind]])
+                Dict(:support => [dgp.suppZ[zind]]),
+                [s_ivlike.legendtitle[i]]
             )
             update_ivlike_weights(s,
-                                  legendtitle(s_ivlike)[i],
+                                  legendtitle(s),
                                   pathtitle(s_ivlike)[i])
         end
     end
@@ -257,10 +258,11 @@ function mtrs_and_weights(savedir::String,
             s = IVLike(
                 "Saturated; index $saturated_idx",
                 [s_ivlike.s[legend_order[saturated_idx]]],
-                nothing
+                nothing,
+                [s_ivlike.legendtitle[saturated_idx]]
             )
             update_ivlike_weights(s,
-                                  legendtitle(s_ivlike, dgp)[saturated_idx],
+                                  legendtitle(s),
                                   pathtitle(s_ivlike)[saturated_idx])
         end
     end
