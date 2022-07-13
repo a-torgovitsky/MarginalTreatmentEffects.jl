@@ -1,0 +1,133 @@
+\documentclass{standalone}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{arrows}
+\usetikzlibrary{plotmarks}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bm}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pgfplotstableread[col sep = comma]{prte-misspecification.csv}\data
+\pgfplotstablegetrowsof{\data} % get number of rows of data
+\pgfmathsetmacro{\rows}{\pgfplotsretval-1} % 0-indexed => shift number of rows by 1
+
+% DRAW A RECTANGLE
+% param: left boundary
+% param: right boundary
+% param: vertical location
+% param: 0.5 * height
+\newcommand\drawrect[4]{
+    \edef\tmp{\noexpand\draw [fill=black] (#1, #3-#4) rectangle (#2, #3+#4);}
+    \tmp
+}
+
+% ROUND NUMBER TO SOME LEVEL OF PRECISION
+% param: number to be rounded
+% param: level of precision
+% REF: https://tex.stackexchange.com/questions/183852/how-can-i-round-numbers-relative-to-their-order-of-magnitude
+\newcommand{\mynum}[2]{
+  \pgfkeys{/pgf/fpu}
+  \pgfmathparse{#1}
+  \pgfmathfloattofixed\pgfmathresult
+  \pgfmathprintnumberto[
+    fixed relative,
+    precision=#2,
+    verbatim,
+  ]{\pgfmathresult}{\tmp}%
+  \tmp
+}
+
+\tikzset{
+    vline/.style={dotted, thick}, % vertical line style
+}
+
+% MACROS
+\def\xmin{-0.17}
+\def\xmax{0.22}
+\def\ymin{0}
+\def\ymax{5}
+
+\begin{document}
+\thispagestyle{empty} % Get rid of page number
+
+% TRUE VALUE COORDINATES
+\pgfplotstablegetelem{0}{[index]1}\of{\data}
+\edef\tvlb{\pgfplotsretval} % \tvlb: lower bound of true value
+\pgfplotstablegetelem{0}{[index]2}\of{\data}
+\edef\tvub{\pgfplotsretval} % \tvub: upper bound of true value
+% NOTE: \tvlb and \tvub should be the same.
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Bounds on a PRTE},
+        % X-AXIS
+        x post scale=2,
+        xlabel={PRTE},
+        axis x line=center,
+        xlabel style={anchor=north, xshift=3mm, yshift=-0.5mm},
+        xticklabel style={
+            /pgf/number format/fixed,
+            /pgf/number format/precision=2
+        }, % remove scientific notation of labels (http://tex.stackexchange.com/questions/119887/ddg#119888)
+        extra x ticks={\tvlb},
+        extra x tick labels = {\mynum{\tvlb}{3}},
+        axis x line=bottom,
+        xmin=\xmin,
+        xmax=\xmax,
+        xmajorgrids = true,
+        xtick style={draw=none},
+        x axis line style = {very thick, ->, >=stealth'},
+        % Y-AXIS
+        ylabel={Selection assumptions}, % Standard case
+        axis y line=center, % somehow puts y-axis label on top...
+        ylabel style={anchor=east, text width=2.9cm, align=center},
+        yticklabels ={
+            ,
+            ,
+            Both instruments with IAM,
+            Instrument~1 with IAM/PM,
+            Instrument~2 with IAM/PM,
+            Both instruments with PM and mutual consistency
+        },
+        yticklabel style={text width=2.9cm, align=center}, % modify text width to control wrapping of y-axis tick labels
+        ytick style={draw=none},
+        axis y line=left, % else: both left and right
+        ymin=\ymin,
+        ymax=\ymax,
+        y dir=reverse, % by default, first row of CSV starts at bottom of y-axis; we want it the other way around
+        y axis line style = {very thick, <-, >=stealth'}, % y dir = reverse so I need to flip the arrow
+        label style={font=\bfseries},
+        title style={font=\bfseries},
+    ]
+
+    % TRUE VALUE VERTICAL LINE
+    \draw[vline] (\tvlb, 0) -- (\tvub, 5);
+    % TRUE VALUE LABEL
+    \draw[very thick, <-, >=stealth'] (\tvlb, 0 + 0.6) -- (\tvlb + 0.02, 0 + 0.4) node[anchor=west,fill=white] {True value};
+
+    % x = 0 VERTICAL LINE
+    \draw[vline] (0, 0) -- (0, 5);
+
+    % BARS
+    % REF: https://tex.stackexchange.com/questions/170664/foreach-not-behaving-in-axis-environment
+    \pgfplotsinvokeforeach{1,...,\rows}{ % skip first row (i.e., skip row index 0)
+        % #1 is the iterator of the for loop
+        % Iterate from the second row (index 1) to the final row (\rows)
+        \pgfplotstablegetelem{#1}{[index]1}\of{\data}
+        \edef\lb{\pgfplotsretval} % save the value of #1-row and second column (index 1) in \lb
+        \pgfplotstablegetelem{#1}{[index]2}\of{\data}
+        \edef\ub{\pgfplotsretval} % save the value of #1-row and third column (index 2) in \ub
+        \drawrect{\lb}{\ub}{#1}{0.25} % Draw rectangle of height 0.25 * 2 = 0.5
+    }
+    \end{axis}
+\end{tikzpicture}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

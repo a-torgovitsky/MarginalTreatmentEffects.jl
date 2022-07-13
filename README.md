@@ -6,6 +6,8 @@ Replication package for:
     Mogstad, Santos, and Torgovitsky (2018, Econometrica)
 2. "Identification and Extrapolation of Causal Effects with Instrumental Variables"
     Mogstad and Torgovitsky (2018, Annual Review of Economics)
+3. "Policy Evaluation with Multiple Instrumental Variables"
+    Mostad, Torgovitsky, and Walters (2021, Journal of Econometrics)
 
 To load/install dependencies:
 
@@ -29,10 +31,10 @@ menu("/path/to/where/you/want/to/save", compile = true)
 
 ## Disclaimer
 
-The solution to the linear programs in MST (2018) and MT (2018) need not be
-unique. While the bounds on the target parameters shouldn't change, the MTRs
-that achieve these bounds may be different when running the code on different
-machines.
+The solution to the linear programs in MST (2018), MT (2018), and MTW (2021)
+need not be unique. While the bounds on the target parameters shouldn't change,
+the MTRs that achieve these bounds may be different when running the code on
+different machines.
 
 ## Errata
 

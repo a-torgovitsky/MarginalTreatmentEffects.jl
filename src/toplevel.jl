@@ -9,6 +9,9 @@ function menu(savelocation::String = "."; compile::Bool = false)
     println("\t 2. Identification and Extrapolation of Causal Effects \r\t
             with Instrumental Variables")
     println("\t\t Mogstad and Torgovitsky (2018, Annual Review of Economics)")
+    println("\t 3. Policy Evaluation with Multiple Instrumental Variables")
+    println("\t\t Mogstad, Torgovitsky, and Walters " *
+            "(2021, Journal of Econometrics)")
     print("Enter project choice: ")
     project_choice = readline()
     project_choice = parse(Int64, project_choice)
@@ -38,8 +41,15 @@ function menu(savelocation::String = "."; compile::Bool = false)
         println("\t 9. ATT Bounds w/ more IV-like estimands (Figure 9)")
         println("\t 10. LATE Bounds w/ Different Information Sets (Figure 10)")
         println("\t 11. LATE Bounds w/ Different MTR Assumptions (Figure 11)")
+    elseif project_choice == 3
+        global project = "mtw2021econometrics"
+        println("\t 1. Illustration of mutual consistency (Figure 2)")
+        println("\t 2. Numerical illustration for ATT (Figure 4)")
+        println("\t 3. Numerical illustration for LATE(+20) (Figure 5)")
+        println("\t 4. PRTE misspecification example (Figure 6)")
     else
-        @error "Invalid answer: only choose 1 or 2"
+        @error "Invalid answer: only choose 1, 2, or 3"
+        # TODO: use @assert
     end
     print("Enter figure choice: ")
     figure_choice = readline()
@@ -137,7 +147,35 @@ function menu(savelocation::String = "."; compile::Bool = false)
             push!(texfiles, run_late_bounds_information(savedir))
             push!(texfiles, run_late_bounds_assumptions(savedir))
         else
-            @error "WIP" project_choice figure_choice
+            @error "ERROR: invalid choice" project_choice figure_choice
+        end
+    elseif project_choice == 3
+        if figure_choice == 1
+            savedir, _ = setup(savelocation, stub = "illustrate-mc")
+            run_illustrate_mc(savedir, compile)
+        elseif figure_choice == 2
+            savedir, _ = setup(savelocation, stub = "simulation-att")
+            run_simulation_att(savedir, compile)
+        elseif figure_choice == 3
+            savedir, _ = setup(savelocation, stub = "simulation-prte")
+            run_simulation_prte(savedir, compile)
+        elseif figure_choice == 4
+            savedir, _ = setup(savelocation, stub = "prte-misspecification")
+            run_prte_misspecification(savedir, compile)
+            elseif figure_choice == 0
+            savedir, _ = setup(savelocation, stub = "everything")
+            results_mc = run_illustrate_mc(savedir, compile)
+            results_att = run_simulation_att(savedir, compile)
+            results_prte = run_simulation_prte(savedir, compile)
+            results_prte_misspecification =
+                run_prte_misspecification(savedir, compile)
+            return Dict(:results_mc => results_mc,
+                        :results_att => results_att,
+                        :results_prte => results_prte,
+                        :results_prte_misspecification =>
+                            results_prte_misspecification)
+        else
+            @error "ERROR: invalid choice" project_choice figure_choice
         end
     end
 
