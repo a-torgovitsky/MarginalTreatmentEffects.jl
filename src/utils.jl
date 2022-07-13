@@ -1,15 +1,21 @@
+# Generate tag from user input
+function generate_tag()
+    print("Enter a directory tag "*
+          "(or hit Enter to generate from the date): ")
+    tag = readline()
+    if isempty(tag)
+        tag = Libc.strftime("%d-%b-%y-at-%H-%M-%S", time())
+    end
+    return tag
+end
+
 # Create the name of the directory where reproductions will be stored.
 function make_dirname(savelocation::String;
                       stub::String = "unnamed",
-                      tag::String = "")
+                      tag::Union{String, Nothing} = nothing)
     println("Saving in: $savelocation")
-    if isempty(tag)
-        print("Enter a directory tag "*
-              "(or hit Enter to generate from the date): ")
-        tag = readline()
-        if isempty(tag)
-            tag = Libc.strftime("%d-%b-%y-at-%H-%M-%S", time())
-        end
+    if isnothing(tag)
+        tag = generate_tag()
     end
 
     if isempty(stub)
@@ -53,6 +59,7 @@ function make_dir(pathstr::String)
     for c in cplist
         destination = joinpath(resultsdir, c)
         if isdir(destination)
+            # TODO: output is distracting, especially when project_choice == 0
             @info destination * " already exists, so not copying tex files."
         else
             cp(joinpath(texdir, c), destination)
@@ -65,7 +72,7 @@ end
 # Set up directory for reproduction
 function setup(savelocation::String;
                stub::String="unnamed",
-               tag::String="")
+               tag::Union{String, Nothing}=nothing)
     pathstr = make_dirname(savelocation, stub = stub, tag = tag)
     resultsdir, already_existed = make_dir(pathstr)
     return resultsdir, already_existed
