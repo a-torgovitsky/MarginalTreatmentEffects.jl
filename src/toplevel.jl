@@ -1,4 +1,5 @@
 function menu(savelocation::String = "."; compile::Bool = false)
+    # Present project options.
     println("="^80)
     println("Marginal Treatment Effects")
     println("="^80)
@@ -16,6 +17,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
     project_choice = readline()
     project_choice = parse(Int64, project_choice)
 
+    # Present figure options.
     println("What figure do you want to reproduce?")
     println("\t 0. Everything")
     if project_choice == 1
@@ -58,125 +60,11 @@ function menu(savelocation::String = "."; compile::Bool = false)
     global texfiles = Vector{String}() # store path of tex files
 
     if project_choice == 1
-        if figure_choice == 1
-            savedir, _ = setup(savelocation, stub = "np-ivs-no-title")
-            push!(texfiles, run_np_ivs_notitle(savedir))
-        elseif figure_choice == 2
-            savedir, _ = setup(savelocation, stub = "np-ivs")
-            push!(texfiles, run_np_ivs(savedir))
-        elseif figure_choice == 3
-            savedir, _ = setup(savelocation, stub = "np-ivs-olss")
-            push!(texfiles, run_np_ivs_olss(savedir))
-        elseif figure_choice == 4
-            # We produce 2 figures here.
-            # See the note in the source code for `run_np_ivnps()`, which can
-            # be found in `src/mst2018econometrica.jl`.
-            savedir, _ = setup(savelocation, stub = "np-ivnps")
-            push!(texfiles, run_np_ivnps(savedir)...)
-        elseif figure_choice == 5
-            savedir, _ = setup(savelocation, stub = "np-sharp")
-            push!(texfiles, run_np_sharp(savedir))
-        elseif figure_choice == 6
-            savedir, _ = setup(savelocation, stub = "np-sharp-decr")
-            push!(texfiles, run_np_sharp_decr(savedir))
-        elseif figure_choice == 7
-            # NOTE: in appendix, K refers to degree, not order
-            savedir, _ = setup(savelocation, stub = "np-sharp-decr-k9")
-            push!(texfiles, run_np_sharp_decr_k9(savedir))
-        elseif figure_choice == 8
-            savedir, _ = setup(savelocation, stub = "tikz-extrapolate")
-            push!(texfiles, run_tikz_extrapolate(savedir))
-        elseif figure_choice == 0
-            savedir, _ = setup(savelocation, stub = "everything")
-            push!(texfiles, run_np_ivs_notitle(savedir))
-            push!(texfiles, run_np_ivs(savedir))
-            push!(texfiles, run_np_ivs_olss(savedir))
-            push!(texfiles, run_np_ivnps(savedir)...)
-            push!(texfiles, run_np_sharp(savedir))
-            push!(texfiles, run_np_sharp_decr(savedir))
-            push!(texfiles, run_np_sharp_decr_k9(savedir))
-            push!(texfiles, run_tikz_extrapolate(savedir))
-        else
-            @error "ERROR: invalid choice" project_choice figure_choice
-        end
+        run_mst2018econometrica(figure_choice, savelocation)
     elseif project_choice == 2
-        if figure_choice == 1
-            savedir, _ = setup(savelocation, stub = "tikz-mtr")
-            push!(texfiles, run_tikz_mtr(savedir))
-        elseif figure_choice == 2
-            savedir, _ = setup(savelocation, stub = "tikz-weights")
-            push!(texfiles, run_tikz_weights(savedir))
-        elseif figure_choice == 3
-            savedir, _ = setup(savelocation, stub = "tikz-late-extrap")
-            push!(texfiles, run_tikz_late_extrap(savedir))
-        elseif figure_choice == 4
-            savedir, _ = setup(savelocation, stub = "k4")
-            push!(texfiles, run_k4(savedir))
-        elseif figure_choice == 5
-            savedir, _ = setup(savelocation, stub = "k9")
-            push!(texfiles, run_k9(savedir))
-        elseif figure_choice == 6
-            savedir, _ = setup(savelocation, stub = "kbounds")
-            push!(texfiles, run_kbounds(savedir))
-        elseif figure_choice == 7
-            savedir, _ = setup(savelocation, stub = "np")
-            push!(texfiles, run_np(savedir))
-        elseif figure_choice == 8
-            savedir, _ = setup(savelocation, stub = "k9-decr")
-            push!(texfiles, run_k9_decr(savedir))
-        elseif figure_choice == 9
-            savedir, _ = setup(savelocation, stub = "k9-decr-add-more")
-            push!(texfiles, run_k9_decr_add_more(savedir))
-        elseif figure_choice == 10
-            savedir, _ = setup(savelocation, stub = "late-bounds-information")
-            push!(texfiles, run_late_bounds_information(savedir))
-        elseif figure_choice == 11
-            savedir, _ = setup(savelocation, stub = "late-bounds-assumptions")
-            push!(texfiles, run_late_bounds_assumptions(savedir))
-        elseif figure_choice == 0
-            savedir, _ = setup(savelocation, stub = "everything")
-            push!(texfiles, run_tikz_mtr(savedir))
-            push!(texfiles, run_tikz_weights(savedir))
-            push!(texfiles, run_tikz_late_extrap(savedir))
-            push!(texfiles, run_k4(savedir))
-            push!(texfiles, run_k9(savedir))
-            push!(texfiles, run_kbounds(savedir))
-            push!(texfiles, run_np(savedir))
-            push!(texfiles, run_k9_decr(savedir))
-            push!(texfiles, run_k9_decr_add_more(savedir))
-            push!(texfiles, run_late_bounds_information(savedir))
-            push!(texfiles, run_late_bounds_assumptions(savedir))
-        else
-            @error "ERROR: invalid choice" project_choice figure_choice
-        end
+        run_mt2018review(figure_choice, savelocation)
     elseif project_choice == 3
-        if figure_choice == 1
-            savedir, _ = setup(savelocation, stub = "illustrate-mc")
-            run_illustrate_mc(savedir, compile)
-        elseif figure_choice == 2
-            savedir, _ = setup(savelocation, stub = "simulation-att")
-            run_simulation_att(savedir, compile)
-        elseif figure_choice == 3
-            savedir, _ = setup(savelocation, stub = "simulation-prte")
-            run_simulation_prte(savedir, compile)
-        elseif figure_choice == 4
-            savedir, _ = setup(savelocation, stub = "prte-misspecification")
-            run_prte_misspecification(savedir, compile)
-            elseif figure_choice == 0
-            savedir, _ = setup(savelocation, stub = "everything")
-            results_mc = run_illustrate_mc(savedir, compile)
-            results_att = run_simulation_att(savedir, compile)
-            results_prte = run_simulation_prte(savedir, compile)
-            results_prte_misspecification =
-                run_prte_misspecification(savedir, compile)
-            return Dict(:results_mc => results_mc,
-                        :results_att => results_att,
-                        :results_prte => results_prte,
-                        :results_prte_misspecification =>
-                            results_prte_misspecification)
-        else
-            @error "ERROR: invalid choice" project_choice figure_choice
-        end
+        run_mtw2018econometrics(figure_choice, savelocation, compile)
     end
 
     # produce PDFs from tex files
@@ -187,3 +75,133 @@ function menu(savelocation::String = "."; compile::Bool = false)
     end
 end
 export menu
+
+# Produce figures in MST (2018)
+function run_mst2018econometrica(figure_choice::Int64, savelocation::String)
+    if figure_choice == 1
+        savedir, _ = setup(savelocation, stub = "np-ivs-no-title")
+        push!(texfiles, run_np_ivs_notitle(savedir))
+    elseif figure_choice == 2
+        savedir, _ = setup(savelocation, stub = "np-ivs")
+        push!(texfiles, run_np_ivs(savedir))
+    elseif figure_choice == 3
+        savedir, _ = setup(savelocation, stub = "np-ivs-olss")
+        push!(texfiles, run_np_ivs_olss(savedir))
+    elseif figure_choice == 4
+        # We produce 2 figures here.
+        # See the note in the source code for `run_np_ivnps()`, which can
+        # be found in `src/mst2018econometrica.jl`.
+        savedir, _ = setup(savelocation, stub = "np-ivnps")
+        push!(texfiles, run_np_ivnps(savedir)...)
+    elseif figure_choice == 5
+        savedir, _ = setup(savelocation, stub = "np-sharp")
+        push!(texfiles, run_np_sharp(savedir))
+    elseif figure_choice == 6
+        savedir, _ = setup(savelocation, stub = "np-sharp-decr")
+        push!(texfiles, run_np_sharp_decr(savedir))
+    elseif figure_choice == 7
+        # NOTE: in appendix, K refers to degree, not order
+        savedir, _ = setup(savelocation, stub = "np-sharp-decr-k9")
+        push!(texfiles, run_np_sharp_decr_k9(savedir))
+    elseif figure_choice == 8
+        savedir, _ = setup(savelocation, stub = "tikz-extrapolate")
+        push!(texfiles, run_tikz_extrapolate(savedir))
+    elseif figure_choice == 0
+        savedir, _ = setup(savelocation, stub = "everything")
+        push!(texfiles, run_np_ivs_notitle(savedir))
+        push!(texfiles, run_np_ivs(savedir))
+        push!(texfiles, run_np_ivs_olss(savedir))
+        push!(texfiles, run_np_ivnps(savedir)...)
+        push!(texfiles, run_np_sharp(savedir))
+        push!(texfiles, run_np_sharp_decr(savedir))
+        push!(texfiles, run_np_sharp_decr_k9(savedir))
+        push!(texfiles, run_tikz_extrapolate(savedir))
+    else
+        @error "ERROR: invalid choice" project_choice figure_choice
+    end
+end
+
+# Produce figures in MT (2018)
+function run_mt2018review(figure_choice::Int64, savelocation::String)
+    if figure_choice == 1
+        savedir, _ = setup(savelocation, stub = "tikz-mtr")
+        push!(texfiles, run_tikz_mtr(savedir))
+    elseif figure_choice == 2
+        savedir, _ = setup(savelocation, stub = "tikz-weights")
+        push!(texfiles, run_tikz_weights(savedir))
+    elseif figure_choice == 3
+        savedir, _ = setup(savelocation, stub = "tikz-late-extrap")
+        push!(texfiles, run_tikz_late_extrap(savedir))
+    elseif figure_choice == 4
+        savedir, _ = setup(savelocation, stub = "k4")
+        push!(texfiles, run_k4(savedir))
+    elseif figure_choice == 5
+        savedir, _ = setup(savelocation, stub = "k9")
+        push!(texfiles, run_k9(savedir))
+    elseif figure_choice == 6
+        savedir, _ = setup(savelocation, stub = "kbounds")
+        push!(texfiles, run_kbounds(savedir))
+    elseif figure_choice == 7
+        savedir, _ = setup(savelocation, stub = "np")
+        push!(texfiles, run_np(savedir))
+    elseif figure_choice == 8
+        savedir, _ = setup(savelocation, stub = "k9-decr")
+        push!(texfiles, run_k9_decr(savedir))
+    elseif figure_choice == 9
+        savedir, _ = setup(savelocation, stub = "k9-decr-add-more")
+        push!(texfiles, run_k9_decr_add_more(savedir))
+    elseif figure_choice == 10
+        savedir, _ = setup(savelocation, stub = "late-bounds-information")
+        push!(texfiles, run_late_bounds_information(savedir))
+    elseif figure_choice == 11
+        savedir, _ = setup(savelocation, stub = "late-bounds-assumptions")
+        push!(texfiles, run_late_bounds_assumptions(savedir))
+    elseif figure_choice == 0
+        savedir, _ = setup(savelocation, stub = "everything")
+        push!(texfiles, run_tikz_mtr(savedir))
+        push!(texfiles, run_tikz_weights(savedir))
+        push!(texfiles, run_tikz_late_extrap(savedir))
+        push!(texfiles, run_k4(savedir))
+        push!(texfiles, run_k9(savedir))
+        push!(texfiles, run_kbounds(savedir))
+        push!(texfiles, run_np(savedir))
+        push!(texfiles, run_k9_decr(savedir))
+        push!(texfiles, run_k9_decr_add_more(savedir))
+        push!(texfiles, run_late_bounds_information(savedir))
+        push!(texfiles, run_late_bounds_assumptions(savedir))
+    else
+        @error "ERROR: invalid choice" project_choice figure_choice
+    end
+end
+
+function run_mtw2018econometrics(figure_choice::Int64,
+                                 savelocation::String,
+                                 compile::Bool)
+    if figure_choice == 1
+        savedir, _ = setup(savelocation, stub = "illustrate-mc")
+        run_illustrate_mc(savedir, compile)
+    elseif figure_choice == 2
+        savedir, _ = setup(savelocation, stub = "simulation-att")
+        run_simulation_att(savedir, compile)
+    elseif figure_choice == 3
+        savedir, _ = setup(savelocation, stub = "simulation-prte")
+        run_simulation_prte(savedir, compile)
+    elseif figure_choice == 4
+        savedir, _ = setup(savelocation, stub = "prte-misspecification")
+        run_prte_misspecification(savedir, compile)
+        elseif figure_choice == 0
+        savedir, _ = setup(savelocation, stub = "everything")
+        results_mc = run_illustrate_mc(savedir, compile)
+        results_att = run_simulation_att(savedir, compile)
+        results_prte = run_simulation_prte(savedir, compile)
+        results_prte_misspecification =
+            run_prte_misspecification(savedir, compile)
+        return Dict(:results_mc => results_mc,
+                    :results_att => results_att,
+                    :results_prte => results_prte,
+                    :results_prte_misspecification =>
+                        results_prte_misspecification)
+    else
+        @error "ERROR: invalid choice" project_choice figure_choice
+    end
+end
