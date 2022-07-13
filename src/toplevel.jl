@@ -167,7 +167,7 @@ function run_mst2018econometrica(figure_choice::Int64,
         push!(texfiles, run_np_sharp_decr_k9(savedir))
         push!(texfiles, run_tikz_extrapolate(savedir))
     else
-        @error "ERROR: invalid choice" project_choice figure_choice
+        @error "Invalid choice." project_choice figure_choice
     end
 end
 
@@ -227,7 +227,7 @@ function run_mt2018review(figure_choice::Int64,
         push!(texfiles, run_late_bounds_information(savedir))
         push!(texfiles, run_late_bounds_assumptions(savedir))
     else
-        @error "ERROR: invalid choice" project_choice figure_choice
+        @error "Invalid choice." project_choice figure_choice
     end
 end
 
@@ -267,6 +267,6 @@ function run_mtw2021econometrics(figure_choice::Int64,
                     :results_prte_misspecification =>
                         results_prte_misspecification[1])
     else
-        @error "ERROR: invalid choice" project_choice figure_choice
+        @error "Invalid choice." project_choice figure_choice
     end
 end
