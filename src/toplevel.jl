@@ -1,13 +1,28 @@
+# 1. Present project options.
+# 2. If "0" is chosen, replace with "123".
+# 3. Rewrite user-input as a vector of integers.
+# 4. If more than one option was chosen:
+#      - Generate tag
+#      - Collect file names of all TikZ figures.
+#      - Go to Step 6.
+# 5. Else:
+#      - Present figure options.
+#      - Generate tag.
+#      - Collect file name of chosen TikZ figure(s).
+#      - Go to Step 6.
+# 6. Compile each tex file collected.
 function menu(savelocation::String = "."; compile::Bool = false)
 
     # Initialization
     global texfiles = Vector{String}() # store path of tex files
+    global project = "" # store name of project; tex/project contains templates
 
     # Present project options.
     println("="^80)
     println("Marginal Treatment Effects")
     println("="^80)
-    println("What project do you want to replicate?")
+    println("What project(s) do you want to replicate? ",
+            "Choose multiple to produce all figures in the chosen projects.")
     println("\t 0. Everything")
     println("\t 1. Using Instrumental Variables for Inference About \r\t
             Policy Relevant Treatment Parameters")
@@ -20,25 +35,36 @@ function menu(savelocation::String = "."; compile::Bool = false)
             "(2021, Journal of Econometrics)")
     print("Enter project choice: ")
     project_choice = readline()
-    project_choice = parse(Int64, project_choice)
-    @assert project_choice in [0, 1, 2, 3] "Choose 0, 1, 2, or 3."
+    if occursin("0", project_choice)
+        project_choice = "123"
+    end
+    project_choice = digits(parse(Int64, project_choice))
+    indices = indexin(project_choice, [1, 2, 3])
+    @assert !(nothing in indices) "Choose combination of 1, 2, or 3."
 
-    # Run everything, or present figure options.
-    if project_choice == 0
+    # Generate all tex files for specified projects, or present figure options.
+    if length(project_choice) >= 2
+        ask_for_figure = false # all figures will be run
         tag = generate_tag()
-        global project = "mst2018econometrica" # tex/project contains templates
-        run_mst2018econometrica(0, savelocation; tag = tag)
-        project = "mt2018review"
-        run_mt2018review(0, savelocation; tag = tag)
-        project = "mtw2021econometrics"
-        run_mtw2018econometrics(0, savelocation; tag = tag)
+        if 1 in project_choice
+            project = "mst2018econometrica"
+            run_mst2018econometrica(0, savelocation; tag = tag)
+        end
+        if 2 in project_choice
+            project = "mt2018review"
+            run_mt2018review(0, savelocation; tag = tag)
+        end
+        if 3 in project_choice
+            project = "mtw2021econometrics"
+            run_mtw2021econometrics(0, savelocation; tag = tag)
+        end
     else
-        println("What figure do you want to reproduce?")
+        println("What figure do you want to reproduce? Choose only one option.")
         println("\t 0. Everything")
     end
 
     # Present project-specific figure options.
-    if project_choice == 1
+    if project_choice == [1]
         global project = "mst2018econometrica"
         println("\t 1. DGP MTRs and Weights for LATE & IV Slope (Figure 1)")
         println("\t 2. LATE Bounds w/ IV Slope (Figure 2)")
@@ -49,7 +75,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
         println("\t 7. Sharp LATE Bounds w/ Decr., 9th degree MTRs (Figure 7)")
         println("\t 8. Bounds on Family of PRTEs (Figure 8)")
         valid_choices = collect(1:8)
-    elseif project_choice == 2
+    elseif project_choice == [2]
         global project = "mt2018review"
         println("\t 1. DGP MTRs and MTE (Figure 1)")
         println("\t 2. Weights for Conventional Target Parameters (Figure 2)")
@@ -63,7 +89,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
         println("\t 10. LATE Bounds w/ Different Information Sets (Figure 10)")
         println("\t 11. LATE Bounds w/ Different MTR Assumptions (Figure 11)")
         valid_choices = collect(1:11)
-    elseif project_choice == 3
+    elseif project_choice == [3]
         global project = "mtw2021econometrics"
         println("\t 1. Illustration of mutual consistency (Figure 2)")
         println("\t 2. Numerical illustration for ATT (Figure 4)")
@@ -71,8 +97,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
         println("\t 4. PRTE misspecification example (Figure 6)")
         valid_choices = collect(1:4)
     end
-
-    if project_choice != 0
+    if length(project_choice) == 1
         print("Enter figure choice: ")
         figure_choice = readline()
         figure_choice = parse(Int64, figure_choice)
@@ -80,12 +105,13 @@ function menu(savelocation::String = "."; compile::Bool = false)
         @assert figure_choice in valid_choices "Choose one of $valid_choices."
     end
 
-    if project_choice == 1
+    # Generate chosen figure.
+    if project_choice == [1]
         run_mst2018econometrica(figure_choice, savelocation)
-    elseif project_choice == 2
+    elseif project_choice == [2]
         run_mt2018review(figure_choice, savelocation)
-    elseif project_choice == 3
-        run_mtw2018econometrics(figure_choice, savelocation)
+    elseif project_choice == [3]
+        run_mtw2021econometrics(figure_choice, savelocation)
     end
 
     # produce PDFs from tex files
@@ -149,7 +175,7 @@ end
 function run_mt2018review(figure_choice::Int64,
                           savelocation::String;
                           tag::Union{String, Nothing} = nothing)
-    println("Replicating MST (2018)...")
+    println("Replicating MT (2018)...")
     if figure_choice == 1
         savedir, _ = setup(savelocation, stub = "tikz-mtr", tag = tag)
         push!(texfiles, run_tikz_mtr(savedir))
@@ -205,10 +231,11 @@ function run_mt2018review(figure_choice::Int64,
     end
 end
 
-function run_mtw2018econometrics(figure_choice::Int64,
+# Produce figures in MTW (2021)
+function run_mtw2021econometrics(figure_choice::Int64,
                                  savelocation::String;
                                  tag::Union{String, Nothing} = nothing)
-    println("Replicating MST (2018)...")
+    println("Replicating MTW (2021)...")
     if figure_choice == 1
         savedir, _ = setup(savelocation, stub = "illustrate-mc", tag = tag)
         push!(texfiles, run_illustrate_mc(savedir)[2:end]...)
