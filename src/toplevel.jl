@@ -23,7 +23,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
     project_choice = parse(Int64, project_choice)
     @assert project_choice in [0, 1, 2, 3] "Choose 0, 1, 2, or 3."
 
-    # Run everything and short-circuit, or present figure options
+    # Run everything, or present figure options.
     if project_choice == 0
         tag = generate_tag()
         global project = "mst2018econometrica" # tex/project contains templates
@@ -31,14 +31,13 @@ function menu(savelocation::String = "."; compile::Bool = false)
         project = "mt2018review"
         run_mt2018review(0, savelocation; tag = tag)
         project = "mtw2021econometrics"
-        # TODO: save tex files and compile later instead of compiling here
-        run_mtw2018econometrics(0, savelocation, compile; tag = tag)
+        run_mtw2018econometrics(0, savelocation; tag = tag)
     else
         println("What figure do you want to reproduce?")
         println("\t 0. Everything")
     end
 
-    # Present figure options.
+    # Present project-specific figure options.
     if project_choice == 1
         global project = "mst2018econometrica"
         println("\t 1. DGP MTRs and Weights for LATE & IV Slope (Figure 1)")
@@ -86,7 +85,7 @@ function menu(savelocation::String = "."; compile::Bool = false)
     elseif project_choice == 2
         run_mt2018review(figure_choice, savelocation)
     elseif project_choice == 3
-        run_mtw2018econometrics(figure_choice, savelocation, compile)
+        run_mtw2018econometrics(figure_choice, savelocation)
     end
 
     # produce PDFs from tex files
@@ -207,36 +206,39 @@ function run_mt2018review(figure_choice::Int64,
 end
 
 function run_mtw2018econometrics(figure_choice::Int64,
-                                 savelocation::String,
-                                 compile::Bool;
+                                 savelocation::String;
                                  tag::Union{String, Nothing} = nothing)
     println("Replicating MST (2018)...")
     if figure_choice == 1
         savedir, _ = setup(savelocation, stub = "illustrate-mc", tag = tag)
-        run_illustrate_mc(savedir, compile)
+        push!(texfiles, run_illustrate_mc(savedir)[2:end]...)
     elseif figure_choice == 2
         savedir, _ = setup(savelocation, stub = "simulation-att", tag = tag)
-        run_simulation_att(savedir, compile)
+        push!(texfiles, run_simulation_att(savedir)[2:end]...)
     elseif figure_choice == 3
         savedir, _ = setup(savelocation, stub = "simulation-prte", tag = tag)
-        run_simulation_prte(savedir, compile)
+        push!(texfiles, run_simulation_prte(savedir)[2:end]...)
     elseif figure_choice == 4
         savedir, _ = setup(savelocation,
                            stub = "prte-misspecification",
                            tag = tag)
-        run_prte_misspecification(savedir, compile)
-        elseif figure_choice == 0
+        push!(texfiles, run_prte_misspecification(savedir)[2:end]...)
+    elseif figure_choice == 0
         savedir, _ = setup(savelocation, stub = "everything", tag = tag)
-        results_mc = run_illustrate_mc(savedir, compile)
-        results_att = run_simulation_att(savedir, compile)
-        results_prte = run_simulation_prte(savedir, compile)
+        results_mc = run_illustrate_mc(savedir)
+        push!(texfiles, results_mc[2:end]...)
+        results_att = run_simulation_att(savedir)
+        push!(texfiles, results_att[2:end]...)
+        results_prte = run_simulation_prte(savedir)
+        push!(texfiles, results_prte[2:end]...)
         results_prte_misspecification =
-            run_prte_misspecification(savedir, compile)
-        return Dict(:results_mc => results_mc,
-                    :results_att => results_att,
-                    :results_prte => results_prte,
+            run_prte_misspecification(savedir)
+        push!(texfiles, results_prte_misspecification[2:end]...)
+        return Dict(:results_mc => results_mc[1],
+                    :results_att => results_att[1],
+                    :results_prte => results_prte[1],
                     :results_prte_misspecification =>
-                        results_prte_misspecification)
+                        results_prte_misspecification[1])
     else
         @error "ERROR: invalid choice" project_choice figure_choice
     end
