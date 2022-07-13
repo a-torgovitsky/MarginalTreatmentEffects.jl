@@ -84,12 +84,14 @@ function compile_latex(fn::String)
     try
         cd(dirname(fn))
         cstr = `pdflatex -halt-on-error $(basename(fn)) "|" grep -a3 ^!`
+        byproducts = ["aux", "log"]
         @suppress begin
             run(cstr)
-            run(cstr) # NOTE: need to run twice to get references correct
-            # Q(a-torgovitsky): why not use latexmk to compile pdf?
-            # i.e. run(`latexmk -pdf $(basename(fn))`)
-            run(`latexmk -c`)
+            run(cstr) # run twice to get references correct
+            for extension in byproducts
+                remove = "$(splitext(basename(fn))[1]).$(extension)"
+                run(`rm $remove`)
+            end
         end
         cd(oldwd)
     catch err
