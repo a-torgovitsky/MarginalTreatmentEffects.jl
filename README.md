@@ -3,11 +3,11 @@
 Replication package for:
 
 1. "Using Instrumental Variables for Inference About Policy Relevant Treatment Parameters"
-    Mogstad, Santos, and Torgovitsky (2018, Econometrica)
+    Mogstad, Santos, and Torgovitsky (2018, _Econometrica_)
 2. "Identification and Extrapolation of Causal Effects with Instrumental Variables"
-    Mogstad and Torgovitsky (2018, Annual Review of Economics)
+    Mogstad and Torgovitsky (2018, _Annual Review of Economics_)
 3. "Policy Evaluation with Multiple Instrumental Variables"
-    Mostad, Torgovitsky, and Walters (2021, Journal of Econometrics)
+    Mostad, Torgovitsky, and Walters (Forthcoming, _Journal of Econometrics_)
 
 To load/install dependencies:
 
@@ -31,10 +31,9 @@ menu("/path/to/where/you/want/to/save", compile = true)
 
 ## Disclaimer
 
-The solution to the linear programs in MST (2018), MT (2018), and MTW (2021)
-need not be unique. While the bounds on the target parameters shouldn't change,
-the MTRs that achieve these bounds may be different when running the code on
-different machines.
+The solutions to the linear programs are typically not unique and can depend intricately on both software versions and hardware.
+As a consequence, figures that graph optimal MTR functions (such as Figures 2--7 of MST) may not reproduce, and might reproduce differently on different machines.
+The bounds on the target parameters are unique, however, and should reproduce on different machines.
 
 ## Errata
 
