@@ -28,41 +28,63 @@ function make_dirname(savelocation::String;
 end
 
 # Create self-contained directory where the reproductions will be stored.
-function make_dir(pathstr::String)
+# If `copysource` is true, then source code will also be copied into `pathstr`
+# and the results will be in a dedicated `results` folder.
+function make_dir(pathstr::String; copysource::Bool = false)
+    # Create directory that contains output, including source code and results.
     if isdir(pathstr)
-        @info "Directory already exists, so not copying source files."
+        @info "Output directory already exists."
     else
         mkpath(pathstr)
+    end
+
+    # Create relevant paths.
+    if copysource
+        resultsdir = joinpath(pathstr, "results")
+    else
+        resultsdir = joinpath(pathstr)
+    end
+    projectdir = joinpath(resultsdir, project) # project-specific results
+    sourcepathstr = joinpath(@__DIR__, "../")  # source code
+
+    # Create project-specific directory for holding results.
+    already_existed = false
+    if isdir(projectdir)
+        @info "Results directory for $project already exists, not modifying."
+        already_existed = true
+    else
+        mkpath(projectdir) # creates `resultsdir` if it does not already exist
+    end
+
+    # Copy source code and tex templates if `copysource` is true.
+    if copysource
         cplist = ["LICENSE", "Project.toml", "README.md",
                   "src", "tex"]
-        sourcepathstr = joinpath(@__DIR__, "../")
         for c in cplist
-            cp(joinpath(sourcepathstr, c),
-               joinpath(pathstr, c),
-               follow_symlinks=true)
+            source = joinpath(sourcepathstr, c)
+            destination = joinpath(pathstr, c)
+            if ispath(destination)
+                # TODO: output is distracting, especially when project_choice == 0
+                @info "Source code already exists, so not copying."
+                break
+            else
+                cp(source, destination, follow_symlinks=true)
+            end
         end
     end
 
-    # Make a directory for holding output
-    resultsdir = joinpath(pathstr, "results")
-    already_existed = false
-    if isdir(resultsdir)
-        @info "Results directory already exists, not modifying."
-        already_existed = true
-    else
-        mkdir(resultsdir)
-    end
-
-    # Copy .tex files to results directory
-    texdir = joinpath(resultsdir, "../tex")
+    # Copy project-specific .tex files to results directory.
+    texdir = joinpath(sourcepathstr, "tex", project)
     cplist = readdir(texdir)
     for c in cplist
-        destination = joinpath(resultsdir, c)
-        if isdir(destination)
+        source = joinpath(texdir, c)
+        destination = joinpath(projectdir, c)
+        if ispath(destination)
             # TODO: output is distracting, especially when project_choice == 0
             @info destination * " already exists, so not copying tex files."
+            break
         else
-            cp(joinpath(texdir, c), destination)
+            cp(source, destination)
         end
     end
 
@@ -72,9 +94,10 @@ end
 # Set up directory for reproduction
 function setup(savelocation::String;
                stub::String="unnamed",
-               tag::Union{String, Nothing}=nothing)
+               tag::Union{String, Nothing}=nothing,
+               copysource::Bool = false)
     pathstr = make_dirname(savelocation, stub = stub, tag = tag)
-    resultsdir, already_existed = make_dir(pathstr)
+    resultsdir, already_existed = make_dir(pathstr, copysource = copysource)
     return resultsdir, already_existed
 end
 

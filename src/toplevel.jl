@@ -11,7 +11,9 @@
 #      - Collect file name of chosen TikZ figure(s).
 #      - Go to Step 6.
 # 6. Compile each tex file collected.
-function menu(savelocation::String = "."; compile::Bool = false)
+function menu(savelocation::String = ".";
+              compile::Bool = false,
+              copysource::Bool = false)
 
     # Initialization
     global texfiles = Vector{String}() # store path of tex files
@@ -48,15 +50,24 @@ function menu(savelocation::String = "."; compile::Bool = false)
         tag = generate_tag()
         if 1 in project_choice
             project = "mst2018econometrica"
-            run_mst2018econometrica(0, savelocation; tag = tag)
+            run_mst2018econometrica(0,
+                                    savelocation;
+                                    tag = tag,
+                                    copysource = copysource)
         end
         if 2 in project_choice
             project = "mt2018review"
-            run_mt2018review(0, savelocation; tag = tag)
+            run_mt2018review(0,
+                             savelocation;
+                             tag = tag,
+                             copysource = copysource)
         end
         if 3 in project_choice
             project = "mtw2021econometrics"
-            run_mtw2021econometrics(0, savelocation; tag = tag)
+            run_mtw2021econometrics(0,
+                                    savelocation;
+                                    tag = tag,
+                                    copysource = copysource)
         end
     else
         println("What figure do you want to reproduce? Choose only one option.")
@@ -107,11 +118,17 @@ function menu(savelocation::String = "."; compile::Bool = false)
 
     # Generate chosen figure.
     if project_choice == [1]
-        run_mst2018econometrica(figure_choice, savelocation)
+        run_mst2018econometrica(figure_choice,
+                                savelocation,
+                                copysource = copysource)
     elseif project_choice == [2]
-        run_mt2018review(figure_choice, savelocation)
+        run_mt2018review(figure_choice,
+                         savelocation,
+                         copysource = copysource)
     elseif project_choice == [3]
-        run_mtw2021econometrics(figure_choice, savelocation)
+        run_mtw2021econometrics(figure_choice,
+                                savelocation,
+                                copysource = copysource)
     end
 
     # produce PDFs from tex files
@@ -126,38 +143,66 @@ export menu
 # Produce figures in MST (2018)
 function run_mst2018econometrica(figure_choice::Int64,
                                  savelocation::String;
-                                 tag::Union{String, Nothing} = nothing)
+                                 tag::Union{String, Nothing} = nothing,
+                                 copysource::Bool = false)
     println("Replicating MST (2018)...")
     if figure_choice == 1
-        savedir, _ = setup(savelocation, stub = "np-ivs-no-title", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "np-ivs-no-title",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_np_ivs_notitle(savedir))
     elseif figure_choice == 2
-        savedir, _ = setup(savelocation, stub = "np-ivs", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "np-ivs",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_np_ivs(savedir))
     elseif figure_choice == 3
-        savedir, _ = setup(savelocation, stub = "np-ivs-olss", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "np-ivs-olss",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_np_ivs_olss(savedir))
     elseif figure_choice == 4
         # We produce 2 figures here.
         # See the note in the source code for `run_np_ivnps()`, which can
         # be found in `src/mst2018econometrica.jl`.
-        savedir, _ = setup(savelocation, stub = "np-ivnps", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "np-ivnps",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_np_ivnps(savedir)...)
     elseif figure_choice == 5
-        savedir, _ = setup(savelocation, stub = "np-sharp", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "np-sharp",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_np_sharp(savedir))
     elseif figure_choice == 6
-        savedir, _ = setup(savelocation, stub = "np-sharp-decr", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "np-sharp-decr",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_np_sharp_decr(savedir))
     elseif figure_choice == 7
         # NOTE: in appendix, K refers to degree, not order
-        savedir, _ = setup(savelocation, stub = "np-sharp-decr-k9", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "np-sharp-decr-k9",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_np_sharp_decr_k9(savedir))
     elseif figure_choice == 8
-        savedir, _ = setup(savelocation, stub = "tikz-extrapolate", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "tikz-extrapolate",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_tikz_extrapolate(savedir))
     elseif figure_choice == 0
-        savedir, _ = setup(savelocation, stub = "everything", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "everything",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_np_ivs_notitle(savedir))
         push!(texfiles, run_np_ivs(savedir))
         push!(texfiles, run_np_ivs_olss(savedir))
@@ -174,47 +219,80 @@ end
 # Produce figures in MT (2018)
 function run_mt2018review(figure_choice::Int64,
                           savelocation::String;
-                          tag::Union{String, Nothing} = nothing)
+                          tag::Union{String, Nothing} = nothing,
+                          copysource::Bool = false)
     println("Replicating MT (2018)...")
     if figure_choice == 1
-        savedir, _ = setup(savelocation, stub = "tikz-mtr", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "tikz-mtr",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_tikz_mtr(savedir))
     elseif figure_choice == 2
-        savedir, _ = setup(savelocation, stub = "tikz-weights", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "tikz-weights",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_tikz_weights(savedir))
     elseif figure_choice == 3
-        savedir, _ = setup(savelocation, stub = "tikz-late-extrap", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "tikz-late-extrap",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_tikz_late_extrap(savedir))
     elseif figure_choice == 4
-        savedir, _ = setup(savelocation, stub = "k4", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "k4",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_k4(savedir))
     elseif figure_choice == 5
-        savedir, _ = setup(savelocation, stub = "k9", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "k9",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_k9(savedir))
     elseif figure_choice == 6
-        savedir, _ = setup(savelocation, stub = "kbounds", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "kbounds",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_kbounds(savedir))
     elseif figure_choice == 7
-        savedir, _ = setup(savelocation, stub = "np", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "np",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_np(savedir))
     elseif figure_choice == 8
-        savedir, _ = setup(savelocation, stub = "k9-decr", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "k9-decr",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_k9_decr(savedir))
     elseif figure_choice == 9
-        savedir, _ = setup(savelocation, stub = "k9-decr-add-more", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "k9-decr-add-more",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_k9_decr_add_more(savedir))
     elseif figure_choice == 10
         savedir, _ = setup(savelocation,
                            stub = "late-bounds-information",
-                           tag = tag)
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_late_bounds_information(savedir))
     elseif figure_choice == 11
         savedir, _ = setup(savelocation,
                            stub = "late-bounds-assumptions",
-                           tag = tag)
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_late_bounds_assumptions(savedir))
     elseif figure_choice == 0
-        savedir, _ = setup(savelocation, stub = "everything", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "everything",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_tikz_mtr(savedir))
         push!(texfiles, run_tikz_weights(savedir))
         push!(texfiles, run_tikz_late_extrap(savedir))
@@ -234,24 +312,38 @@ end
 # Produce figures in MTW (2021)
 function run_mtw2021econometrics(figure_choice::Int64,
                                  savelocation::String;
-                                 tag::Union{String, Nothing} = nothing)
+                                 tag::Union{String, Nothing} = nothing,
+                                 copysource::Bool = false)
     println("Replicating MTW (2021)...")
     if figure_choice == 1
-        savedir, _ = setup(savelocation, stub = "illustrate-mc", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "illustrate-mc",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_illustrate_mc(savedir)[2:end]...)
     elseif figure_choice == 2
-        savedir, _ = setup(savelocation, stub = "simulation-att", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "simulation-att",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_simulation_att(savedir)[2:end]...)
     elseif figure_choice == 3
-        savedir, _ = setup(savelocation, stub = "simulation-prte", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "simulation-prte",
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_simulation_prte(savedir)[2:end]...)
     elseif figure_choice == 4
         savedir, _ = setup(savelocation,
                            stub = "prte-misspecification",
-                           tag = tag)
+                           tag = tag,
+                           copysource = copysource)
         push!(texfiles, run_prte_misspecification(savedir)[2:end]...)
     elseif figure_choice == 0
-        savedir, _ = setup(savelocation, stub = "everything", tag = tag)
+        savedir, _ = setup(savelocation,
+                           stub = "everything",
+                           tag = tag,
+                           copysource = copysource)
         results_mc = run_illustrate_mc(savedir)
         push!(texfiles, results_mc[2:end]...)
         results_att = run_simulation_att(savedir)
