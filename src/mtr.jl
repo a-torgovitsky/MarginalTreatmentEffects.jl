@@ -13,7 +13,6 @@
         new(basis, θ)
     end
 end
-export MTR
 
 function evaluate_mtr(mtr::MTR, ev::DataFrame)
     result = fill(NaN, nrow(ev))
@@ -24,7 +23,6 @@ function evaluate_mtr(mtr::MTR, ev::DataFrame)
     end
     return result
 end
-export evaluate_mtr
 
 function evaluate_mtr(mtrs::Tuple{MTR, MTR}, ev::DataFrame)
     result = fill(NaN, nrow(ev))

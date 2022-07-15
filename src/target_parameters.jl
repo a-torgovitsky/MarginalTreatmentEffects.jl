@@ -29,7 +29,6 @@ struct TargetParameter
         new(name, int_limits, int_constant, legendtitle)
     end
 end
-export TargetParameter
 
 function eval_tp(tp::TargetParameter, mtrs::Vector{Tuple{MTR, MTR}}, dgp)
     Γ⭑ = compute_Γ⭑(tp, [(mtr[1].basis, mtr[2].basis) for mtr in mtrs], dgp)
@@ -39,7 +38,6 @@ function eval_tp(tp::TargetParameter, mtrs::Vector{Tuple{MTR, MTR}}, dgp)
     end
     return total
 end
-export eval_tp
 
 function compute_Γ⭑(tp::TargetParameter,
                     bases::Vector{Tuple{MTRBasis, MTRBasis}}, dgp::DGP)
@@ -66,7 +64,6 @@ function ey1(dgp::DGP; ℓ = 1)
         "\$\\mathbb{E}[Y(1)]\$"
     )
 end
-export ey1
 
 function att(dgp::DGP; ℓ = 1)
     prd1 = dot(dgp.pscore, dgp.densZ)
@@ -76,7 +73,6 @@ function att(dgp::DGP; ℓ = 1)
         (l,d,z) -> ((l == ℓ) * (2*d - 1)/prd1) * find_density(z, dgp)
     )
 end
-export att
 
 function atu(dgp::DGP; ℓ = 1)
     prd1 = dot(dgp.pscore, dgp.densZ)
@@ -86,7 +82,6 @@ function atu(dgp::DGP; ℓ = 1)
         (l,d,z) -> ((l == ℓ) * (2*d - 1)/(1 - prd1)) * find_density(z, dgp)
     )
 end
-export atu
 
 function prte_plusδpercent(dgp::DGP, δ; ℓ = 1)
     @assert ℓ == 1 # haven't coded the other case
@@ -99,7 +94,6 @@ function prte_plusδpercent(dgp::DGP, δ; ℓ = 1)
                     find_density(z, dgp) / (limits(z)[2] - limits(z)[1]))
     )
 end
-export prte_plusδpercent
 
 function ate(dgp::DGP; ℓ = 1)
     TargetParameter(
@@ -108,7 +102,6 @@ function ate(dgp::DGP; ℓ = 1)
         (l,d,z) -> ((1 == ℓ) * (2*d - 1))
     )
 end
-export ate
 
 function late(dgp::DGP, u₁, u₂; ℓ = 1)
     @assert ℓ == 1 # haven't coded the other case
@@ -120,7 +113,6 @@ function late(dgp::DGP, u₁, u₂; ℓ = 1)
         "LATE(\$$(@sprintf("%.2f", u₁)), $(@sprintf("%.2f", u₂))\$)",
     )
 end
-export late
 
 ################################################################################
 # Special type of PRTE
@@ -140,4 +132,3 @@ function prte_newz(dgpold::DGP, dgpnew::DGP; ℓ = 1)
                      (find_density(z, dgpnew) - find_density(z, dgpold)))
     )
 end
-export prte_newz

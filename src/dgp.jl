@@ -13,18 +13,15 @@
         new(suppZ, densZ, pscore, mtrs)
     end
 end
-export DGP
 
 function find_pscore(z, dgp::DGP)
     idx = findall([z == dgp.suppZ[i, :] for i in 1:size(dgp.suppZ, 1)])
     @assert length(idx) == 1 # find one and only one match
     return dgp.pscore[idx][1]
 end
-export find_pscore
 
 function find_density(z, dgp::DGP)
     idx = findall([z == dgp.suppZ[i, :] for i in 1:size(dgp.suppZ, 1)])
     @assert length(idx) == 1 # find one and only one match
     return dgp.densZ[idx][1]
 end
-export find_density

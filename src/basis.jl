@@ -20,7 +20,6 @@
         new(a, b, ib)
     end
 end
-export MTRBasis
 
 # Take multiple MTRBasis and concatenate them
 function MTRBasis(bases::Vector{MTRBasis})
@@ -36,7 +35,6 @@ function bernstein_basis(K)
     ib = [(u, v) -> integrate_bernstein_polynomial(u, v, k, K) for k in 0:K]
     MTRBasis(a, b, ib)
 end
-export bernstein_basis
 
 function interacted_bernstein_basis(K; notℓ = 1)
     @assert notℓ in [1, 2]
@@ -48,7 +46,6 @@ function interacted_bernstein_basis(K; notℓ = 1)
 
     MTRBasis(a, b, ib)
 end
-export interacted_bernstein_basis
 
 ################################################################################
 # The kth Bernstein polynomial of degree K, evaluated at u
@@ -63,7 +60,6 @@ function bernstein_polynomial(u, k::Integer, K::Integer)
     bernstein_errorcheck(k, K)
     return binomial(K,k) * (u.^k) .* ((1 .- u) .^ (K-k));
 end
-export bernstein_polynomial
 
 function bernstein_errorcheck(k::Integer, K::Integer)
     if ((k < 0) | (k > K))
@@ -111,7 +107,6 @@ function integrate_bernstein_polynomial(u::Real, v::Real,
                                         k::Integer, K::Integer)
     integrate_bernstein_polynomial([u], [v], k, K)[1]
 end
-export integrate_bernstein_polynomial
 
 function constantspline_basis(knots::Vector{<:Real})
     a = [(z) -> 1]
@@ -132,7 +127,6 @@ function constantspline_basis(knots::Vector{<:Real})
           for k in 2:length(knots)]
     MTRBasis(a, b, ib)
 end
-export constantspline_basis
 
 function interacted_constantspline_basis(knots::Vector{<:Real}; notℓ = 1)
     @assert notℓ in [1, 2]
@@ -144,7 +138,6 @@ function interacted_constantspline_basis(knots::Vector{<:Real}; notℓ = 1)
 
     MTRBasis(a, b, ib)
 end
-export interacted_constantspline_basis
 
 function switching_constantspline_basis(knots::Vector{<:Real}; notℓ = 1)
     @assert notℓ in [1, 2]
@@ -153,4 +146,3 @@ function switching_constantspline_basis(knots::Vector{<:Real}; notℓ = 1)
     a = [z -> (1 - z[notℓ]), z -> z[notℓ]]
     MTRBasis(a, basis.b, basis.ib)
 end
-export switching_constantspline_basis

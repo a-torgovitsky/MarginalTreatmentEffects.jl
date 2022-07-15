@@ -213,4 +213,3 @@ function compute_bounds(tp::TargetParameter,
 
     return results
 end
-export compute_bounds

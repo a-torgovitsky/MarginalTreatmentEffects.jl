@@ -1102,7 +1102,6 @@ function illustrate_mc()
     results[:, "MTR (l=2 d=1 z1=1) incon"] = evaluate_mtr(r[:mtr_ub][2][2], ev)
     return results
 end
-export illustrate_mc
 
 """
     simulation_att()
@@ -1168,7 +1167,6 @@ function simulation_att()
 
     return results
 end
-export simulation_att
 
 """
     simulation_prte()
@@ -1222,7 +1220,6 @@ function simulation_prte()
 
     return results
 end
-export simulation_prte
 
 """
     prte_misspecification()
@@ -1290,4 +1287,3 @@ function prte_misspecification(; ℓ_gen = 1)
     results[5, :ub] = r[:ub]
     return results
 end
-export prte_misspecification

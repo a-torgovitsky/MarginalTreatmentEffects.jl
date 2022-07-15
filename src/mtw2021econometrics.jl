@@ -6,7 +6,6 @@ function default_mtrs()
     mtr1 = MTR(mtrbasis, hcat(.8, .4))
     return (mtr0, mtr1)
 end
-export default_mtrs
 
 function default_suppZ()
     return [0 0 ;
@@ -27,7 +26,6 @@ function illustration_dgp()
         mtrs = default_mtrs()
     )
 end
-export illustration_dgp
 
 function simulation_dgp()
     DGP(
@@ -37,7 +35,6 @@ function simulation_dgp()
         mtrs = default_mtrs()
     )
 end
-export simulation_dgp
 
 function prte_dgp(; ℓ_gen = 1)
                     # E[Y | G = g]    Pr[G = g]
@@ -119,7 +116,6 @@ function prte_dgp(; ℓ_gen = 1)
               mtrs = (mtr0, mtr1))
     return dgp
 end
-export prte_dgp
 
 function group_average(n, glist)
     dot(n[glist, "ExpY"], n[glist, "Pr"])/sum(n[glist, "Pr"])
@@ -135,7 +131,6 @@ function run_illustrate_mc(savedir::String)
     texfn2 = joinpath(savedir, "figure2b.tex")
     return results, texfn1, texfn2
 end
-export run_illustrate_mc
 
 # Numerical illustration for ATT (Figure 4)
 function run_simulation_att(savedir::String)
@@ -146,7 +141,6 @@ function run_simulation_att(savedir::String)
     texfn = joinpath(savedir, "figure4.tex")
     return results, texfn
 end
-export run_simulation_att
 
 # Numerical illustration for LATE(+20) (Figure 5)
 function run_simulation_prte(savedir::String)
@@ -157,7 +151,6 @@ function run_simulation_prte(savedir::String)
     texfn = joinpath(savedir, "figure5.tex")
     return results, texfn
 end
-export run_simulation_prte
 
 # PRTE misspecification example (Figure 6)
 function run_prte_misspecification(savedir::String)
@@ -168,4 +161,3 @@ function run_prte_misspecification(savedir::String)
     texfn = joinpath(savedir, "figure6.tex")
     return results, texfn
 end
-export run_prte_misspecification

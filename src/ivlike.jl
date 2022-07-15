@@ -18,8 +18,6 @@ struct IVLike
         new(name, s, params, legendtitle)
     end
 end
-export IVLike
-
 
 function make_slist(suppZ)
     # one way to generalize is allow for more general slists
@@ -35,7 +33,6 @@ function make_slist(suppZ)
 
     IVLike(name, s, nothing, legendtitle)
 end
-export make_slist
 
 function ivslope(dgp::DGP)
     @assert size(dgp.suppZ, 2) == 1 # haven't coded other cases
@@ -47,7 +44,6 @@ function ivslope(dgp::DGP)
     s = [((d,z) -> ((z[1] - expZ) / covDZ))][:]
     IVLike(name, s, nothing)
 end
-export ivslope
 
 function olsslope(dgp::DGP)
     @assert size(dgp.suppZ, 2) == 1 # haven't coded other cases
@@ -56,7 +52,6 @@ function olsslope(dgp::DGP)
     s = [((d,z) -> ((d - prd1) / (prd1 * (1 - prd1))))][:]
     IVLike(name, s, nothing)
 end
-export olsslope
 
 # TODO: I'm not a fan of the name. Replace `indicator` with `nonparametric`?
 # support is a vector values in dgp.suppZ
@@ -79,7 +74,6 @@ function ivslope_indicator(dgp::DGP; support::Vector)
     end
     IVLike(name, s, Dict(:support => support), legendtitle)
 end
-export ivslope_indicator
 
 function tslsslope_indicator(dgp::DGP)
     @assert size(dgp.suppZ, 2) == 1 # haven't coded other cases
@@ -96,7 +90,6 @@ function tslsslope_indicator(dgp::DGP)
     legendtitle = ["TSLS Slope"]
     IVLike(name, s, nothing, legendtitle)
 end
-export tslsslope_indicator
 
 function wald(dgp::DGP; z₀, z₁)
     @assert size(dgp.suppZ, 2) == 1 # haven't coded other cases
@@ -110,7 +103,6 @@ function wald(dgp::DGP; z₀, z₁)
     legendtitle = ["Wald (\$Z = $(string(z₀))\$ to \$Z = $(string(z₁))\$)"]
     IVLike(name, s, Dict(:z₀ => z₀, :z₁ => z₁), legendtitle)
 end
-export wald
 
 function compute_βₛ(dgp::DGP; slist = "saturated", param = missing)
     Γₛ = compute_Γₛ([(dgp.mtrs[1].basis, dgp.mtrs[2].basis)], dgp,
@@ -123,7 +115,6 @@ function compute_βₛ(dgp::DGP; slist = "saturated", param = missing)
     end
     return βₛ
 end
-export compute_βₛ
 
 # return a 2-dimensional array Γₛ[ℓ, d], where each component is itself
 # a 3-dimensional array with elements [s, j, k]
