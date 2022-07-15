@@ -63,11 +63,8 @@ function menu(savelocation::String = ".";
                              copysource = copysource)
         end
         if 3 in project_choice
-            project = "mtw2021econometrics"
-            run_mtw2021econometrics(0,
-                                    savelocation;
-                                    tag = tag,
-                                    copysource = copysource)
+            project = "mtw2021joe"
+            run_mtw2021joe(0, savelocation; tag = tag, copysource = copysource)
         end
     else
         println("What figure do you want to reproduce? Choose only one option.")
@@ -101,7 +98,7 @@ function menu(savelocation::String = ".";
         println("\t 11. LATE Bounds w/ Different MTR Assumptions (Figure 11)")
         valid_choices = collect(1:11)
     elseif project_choice == [3]
-        global project = "mtw2021econometrics"
+        global project = "mtw2021joe"
         println("\t 1. Illustration of mutual consistency (Figure 2)")
         println("\t 2. Numerical illustration for ATT (Figure 4)")
         println("\t 3. Numerical illustration for LATE(+20) (Figure 5)")
@@ -126,9 +123,7 @@ function menu(savelocation::String = ".";
                          savelocation,
                          copysource = copysource)
     elseif project_choice == [3]
-        run_mtw2021econometrics(figure_choice,
-                                savelocation,
-                                copysource = copysource)
+        run_mtw2021joe(figure_choice, savelocation, copysource = copysource)
     end
 
     # produce PDFs from tex files
@@ -310,10 +305,10 @@ function run_mt2018review(figure_choice::Int64,
 end
 
 # Produce figures in MTW (2021)
-function run_mtw2021econometrics(figure_choice::Int64,
-                                 savelocation::String;
-                                 tag::Union{String, Nothing} = nothing,
-                                 copysource::Bool = false)
+function run_mtw2021joe(figure_choice::Int64,
+                        savelocation::String;
+                        tag::Union{String, Nothing} = nothing,
+                        copysource::Bool = false)
     println("Replicating MTW (2021)...")
     if figure_choice == 1
         savedir, _ = setup(savelocation,

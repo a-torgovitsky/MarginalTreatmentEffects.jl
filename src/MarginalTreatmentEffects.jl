@@ -26,7 +26,7 @@ module MarginalTreatmentEffects
 
     include("mst2018econometrica.jl")
     include("mt2018review.jl")
-    include("mtw2021econometrics.jl")
+    include("mtw2021joe.jl")
     include("toplevel.jl")
 
 end
