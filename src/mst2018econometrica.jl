@@ -56,7 +56,7 @@ function run_np_ivs_notitle(savedir::String)
     opts = defaults_econometrica()
     opts[1][:title] = "~" # no title
     return mtrs_and_weights(savedir,
-                            "np-ivs-no-title";
+                            "figure1";
                              dgp = dgp,
                              tp = late(dgp, 0.35, 0.9),
                              bases = bases,
@@ -77,7 +77,7 @@ function run_np_ivs(savedir::String)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
     return mtrs_and_weights(savedir,
-                            "np-ivs";
+                            "figure2";
                             dgp = dgp,
                             tp = late(dgp, 0.35, 0.9),
                             bases = bases,
@@ -101,7 +101,7 @@ function run_np_ivs_olss(savedir::String)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
     return mtrs_and_weights(savedir,
-                            "np-ivs-olss";
+                            "figure3";
                             dgp = dgp,
                             tp = late(dgp, 0.35, 0.9),
                             bases = bases,
@@ -146,7 +146,7 @@ function run_np_ivnps(savedir::String)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
     texfn1, v1lb, v1ub = mtrs_and_weights(savedir,
-                                          "np-ivnps-v1";
+                                          "figure4-v1";
                                            dgp = dgp,
                                            tp = late(dgp, 0.35, 0.9),
                                            bases = bases,
@@ -162,7 +162,7 @@ function run_np_ivnps(savedir::String)
     opts[1][:title] = "Nonparametric bounds"
     fixdf = DataFrame(ℓ = 1, d = 1, j = 1, k = 1, fix = 1.0)
     texfn2, v2lb, v2ub = mtrs_and_weights(savedir,
-                                          "np-ivnps-v2";
+                                          "figure4-v2";
                                           dgp = dgp,
                                           tp = late(dgp, 0.35, 0.9),
                                           bases = bases,
@@ -192,7 +192,7 @@ function run_np_sharp(savedir::String)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds"
     return mtrs_and_weights(savedir,
-                            "np-sharp";
+                            "figure5";
                             dgp = dgp,
                             tp = late(dgp, 0.35, 0.9),
                             bases = bases,
@@ -213,7 +213,7 @@ function run_np_sharp_decr(savedir::String)
     opts = defaults_econometrica()
     opts[1][:title] = "Nonparametric bounds, MTRs decreasing"
     return mtrs_and_weights(savedir,
-                            "np-sharp-decr";
+                            "figure6";
                             dgp = dgp,
                             tp = late(dgp, 0.35, 0.9),
                             bases = bases,
@@ -233,7 +233,7 @@ function run_np_sharp_decr_k9(savedir::String)
     opts = defaults_econometrica()
     opts[1][:title] = "9th degree polynomial bounds, MTRs decreasing"
     return mtrs_and_weights(savedir,
-                            "np-sharp-decr-k9";
+                            "figure7";
                             dgp = dgp,
                             tp = late(dgp, 0.35, 0.9),
                             bases = bases,
@@ -244,5 +244,5 @@ end
 
 # Bounds on Family of PRTEs (Figure 8)
 function run_tikz_extrapolate(savedir::String)
-    return tikz_extrapolate(savedir, "tikz-extrapolate")
+    return tikz_extrapolate(savedir, "figure8")
 end

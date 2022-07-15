@@ -51,12 +51,12 @@ end
 
 # Weights for Conventional Target Parameters (Figure 2)
 function run_tikz_weights(savedir::String)
-    return conventional_weights(savedir, "tikz-weights")
+    return conventional_weights(savedir, "figure2")
 end
 
 # LATE Extrapolation (Figure 3)
 function run_tikz_late_extrap(savedir::String)
-    return late_extrap(savedir, "tikz-late-extrap")
+    return late_extrap(savedir, "figure3")
 end
 
 # ATT Bounds w/ 4th degree MTRs (Figure 4)
@@ -72,7 +72,7 @@ function run_k4(savedir::String)
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
     return mtrs_and_weights(savedir,
-                            "k4";
+                            "figure4";
                             dgp = dgp,
                             tp = att(dgp),
                             bases = bases,
@@ -94,7 +94,7 @@ function run_k9(savedir::String)
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
     return mtrs_and_weights(savedir,
-                            "k9";
+                            "figure5";
                             dgp = dgp,
                             tp = att(dgp),
                             bases = bases,
@@ -106,7 +106,7 @@ end
 # ATT Bounds w/ Different MTR Assumptions (Figure 6)
 function run_kbounds(savedir::String)
     dgp = dgp_review()
-    return kbounds(savedir, "kbounds"; dgp = dgp)
+    return kbounds(savedir, "figure6"; dgp = dgp)
 end
 
 # ATT Bounds w/ Nonparametric MTRs (Figure 7)
@@ -123,7 +123,7 @@ function run_np(savedir::String)
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
     return mtrs_and_weights(savedir,
-                            "np";
+                            "figure7";
                             dgp = dgp,
                             tp = att(dgp),
                             bases = bases,
@@ -148,7 +148,7 @@ function run_k9_decr(savedir::String)
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
     return mtrs_and_weights(savedir,
-                            "k9-decr";
+                            "figure8";
                             dgp = dgp,
                             tp = att(dgp),
                             bases = bases,
@@ -173,7 +173,7 @@ function run_k9_decr_add_more(savedir::String)
     opts[1][:title] = "Bounds"
     opts[1][:titlesuffix] = " -- shown at upper bound"
     return mtrs_and_weights(savedir,
-                            "k9-decr-add-more";
+                            "figure9";
                             dgp = dgp,
                             tp = att(dgp),
                             bases = bases,
@@ -184,10 +184,10 @@ end
 
 # LATE Bounds w/ Different Information Sets (Figure 10)
 function run_late_bounds_information(savedir::String)
-    return late_information(savedir, "late-bounds-information")
+    return late_information(savedir, "figure10")
 end
 
 # LATE Bounds w/ Different MTR Assumptions (Figure 11)
 function run_late_bounds_assumptions(savedir::String)
-    return late_assumptions(savedir, "late-bounds-assumptions")
+    return late_assumptions(savedir, "figure11")
 end
