@@ -1,0 +1,101 @@
+\documentclass{standalone}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{arrows}
+\usetikzlibrary{plotmarks}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bm}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pgfplotstableread[col sep = comma]{simulation-prte.csv}\data
+
+\begin{document}
+\thispagestyle{empty} % Get rid of page number
+
+\pgfplotscreateplotcyclelist{my black white}{%
+    solid, thick, every mark/.append style={solid, fill=black}, mark=square*\\
+    dotted, thick, every mark/.append style={solid, fill=black}, mark=*\\
+    dashed, thick, every mark/.append style={solid, fill=black}, mark=diamond*\\
+    dashdotted, thick, every mark/.append style={solid, fill=black}, mark=triangle*\\
+}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        scale=1.2,
+        height = 8.5cm,
+        width = 11cm,
+        xtick=data,
+        title={Bounds on an extrapolated LATE for model $\bm{\ell = 1}$ ($\bm{\text{LATE}_{1}(+\%20)}$}),
+        xlabel={Polynomial degree for the $\bm{\ell = 1}$ model ($\bm{J_{1}}$)},
+        ylabel={Upper and lower bounds},
+        legend cell align=left,
+        cycle list name=my black white,
+        legend style = {
+            at={(.01,.01)},
+            anchor = south west,
+            style={draw=none, fill=none, nodes={scale=1, transform shape}}},
+        tick pos = left,
+        yticklabel style={
+            /pgf/number format/fixed,
+            /pgf/number format/precision=2
+        },
+        %scaled y ticks = false,
+        max space between ticks=25pt,
+        axis y line=left,
+        axis x line=bottom,
+        xmin=1,
+        xmax=10,
+        ymin = -.18,
+        ymax = .34,
+        axis line style = {very thick, ->, >=stealth'},
+        label style={font=\bfseries},
+        title style={font=\bfseries}
+    ]
+    \addlegendimage{empty legend}
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {1}]\data;
+
+    \addplot
+    table[x index = {0}, y index = {2}]\data;
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {3}]\data;
+
+    \addplot
+    table[x index = {0}, y index = {4}]\data;
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {5}]\data;
+
+    \addplot
+    table[x index = {0}, y index = {6}]\data;
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {7}]\data;
+
+    \addplot
+    table[x index = {0}, y index = {8}]\data;
+
+    \addlegendentry{\centering$\bm{\ell = 2}$ \textbf{model}}
+    \addlegendentry{Not used (no mutual consistency)}
+    \addlegendentry{Nonparametric}
+    \addlegendentry{Nonparametric, decreasing}
+    \addlegendentry{Linear}
+
+    %\legend{
+        %Nonparametric $\ell = 2$ model,
+        %Nonparametric $\ell = 2$ modelLinear $\ell = 2$ model,
+        %Quartic $\ell = 2$ model
+    %}
+
+    \end{axis}
+\end{tikzpicture}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

@@ -1,0 +1,121 @@
+\documentclass{standalone}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{arrows}
+\usetikzlibrary{plotmarks}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bm}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pgfplotstableread[col sep = comma]{simulation-att.csv}\data
+
+\begin{document}
+\thispagestyle{empty} % Get rid of page number
+
+\pgfplotscreateplotcyclelist{my black white}{%
+    dotted, thick, every mark/.append style={solid, fill=black}, mark=*\\
+    dashed, thick, every mark/.append style={solid, fill=black}, mark=diamond*\\
+    solid, thick, every mark/.append style={solid, fill=black}, mark=square*\\
+}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        width=11cm,
+        height=8.5cm,
+        scale=1.2,
+        xtick=data,
+        title={Bounds on the average treatment on the treated (ATT)},
+        xlabel={Polynomial degree for both models ($\bm{J_{1} = J_{2}}$)},
+        ylabel={Upper and lower bounds},
+        legend cell align=left,
+        legend style = {
+            at={(.01,.01)},
+            anchor = south west,
+            style={draw=none, fill=none, nodes={scale=1, transform shape}}},
+        cycle list name=my black white,
+        tick pos = left,
+        yticklabel style={
+            /pgf/number format/fixed,
+            /pgf/number format/precision=2
+        },
+        scaled y ticks = false,
+        axis y line=left,
+        axis x line=bottom,
+        xmin=1,
+        xmax=10,
+        axis line style = {very thick, ->, >=stealth'},
+        enlarge y limits = .35,
+        label style={font=\bfseries},
+        title style={font=\bfseries}
+    ]
+
+    % (l = 1, no lc)
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {1}]\data;
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {2}]\data;
+
+    % (l = 1, np, no lc)
+
+    \addplot+[forget plot, mark=none]
+    table[x index = {0}, y index = {7}]\data;
+
+    \addplot+[mark=none]
+    table[x index = {0}, y index = {8}]\data;
+
+    % (l = 2, no lc)
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {3}]\data;
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {4}]\data;
+
+    % (l = 2, np, no lc)
+
+    \addplot+[forget plot, mark=none]
+    table[x index = {0}, y index = {9}]\data;
+
+    \addplot+[mark=none]
+    table[x index = {0}, y index = {10}]\data;
+
+    % (with lc)
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {5}]\data;
+
+    \addplot+[forget plot]
+    table[x index = {0}, y index = {6}]\data;
+
+    % (np, with lc)
+
+    \addplot+[forget plot, mark=none]
+    table[x index = {0}, y index = {11}]\data;
+
+    \addplot+[mark=none]
+    table[x index = {0}, y index = {12}]\data;
+
+    % Label for NP bounds
+    \draw (axis cs:3.5,.8) node (a) {(Nonparametric)};
+    \draw[thick, ->, >=stealth'] (a) -- (axis cs:3.98,.633);
+    \draw[thick, ->, >=stealth'] (a) -- (axis cs:3.02,.5354);
+    \draw[thick, ->, >=stealth'] (a) -- (axis cs:3.5,.6225);
+
+    \legend{
+        $\ell = 1$ without mutual consistency,
+        $\ell = 2$ without mutual consistency,
+        With mutual consistency,
+    }
+
+    \end{axis}
+\end{tikzpicture}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

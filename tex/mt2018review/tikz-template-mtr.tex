@@ -1,0 +1,87 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{plotmarks}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{pdflscape}
+\usepackage{fullpage}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+
+\thispagestyle{empty} % No page number so you can crop correctly
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MUSTACHE VARIABLES
+%
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
+% m0segments: m_0(u)
+% m1segments: m_1(u)
+% mtesegments: difference between m_1(u) and m_0(u)
+%   Notes:
+%     Each of these variables is a vector of dictionaries.
+%     Each dictionary has a single key called "coordinates" that contains the
+%     segment-specific coordinates.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\begin{landscape}
+\begin{center}
+
+\begin{tikzpicture}
+
+\begin{axis}[
+    width=6in,
+    height=4in,
+    ymin=-1,
+    ymax=1,
+    xmin=0,
+    xmax=1,
+    major tick length=.075cm,
+    xlabel={Unobserved Heterogeneity in Treatment Choice ($u$)},
+    ylabel={Parameter Value},
+    legend cell align=left,
+    mark repeat = {10},
+    %cycle list name=black white,
+    cycle list name=exotic,
+]
+
+<<#:m0segments>>
+\addplot
+coordinates{
+  <<coordinates>>
+};
+<</:m0segments>>
+
+<<#:m1segments>>
+\addplot
+coordinates{
+  <<coordinates>>
+};
+<</:m1segments>>
+
+<<#:mtesegments>>
+\addplot
+coordinates{
+  <<coordinates>>
+};
+<</:mtesegments>>
+
+\legend{$m_{0}(u)$, $m_{1}(u)$, $m_{1}(u) - m_{0}(u)$}
+
+\end{axis}
+
+\end{tikzpicture}
+
+\end{center}
+\end{landscape}
+\end{document}

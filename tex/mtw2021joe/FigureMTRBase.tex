@@ -1,0 +1,70 @@
+\documentclass{standalone}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{arrows}
+\usetikzlibrary{plotmarks}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bm}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pgfplotstableread[col sep = comma]{illustrate-mc.csv}\data
+
+\begin{document}
+\thispagestyle{empty} % Get rid of page number
+
+\pgfplotscreateplotcyclelist{my black white}{%
+    solid, very thick\\
+    dotted, thick, every mark/.append style={solid, fill=black}, mark=*\\
+    dotted, thick, every mark/.append style={solid, fill=black}, mark=square*\\
+}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        scale=1,
+        title={\TITLE},
+        xlabel={$\bm{u_{1}}$ and $\bm{u_{2}}$},
+        ylabel={MTR},
+        legend cell align=left,
+        legend style = {at={(0,0)}, draw=none, fill=none, anchor = south west},
+        cycle list name=my black white,
+        tick pos = left,
+        yticklabels ={,,},
+        ytick style={draw=none},
+        axis y line=left,
+        axis x line=bottom,
+        xmin=0,
+        xmax=1,
+        major tick length=0pt,
+        axis line style = {very thick, ->, >=stealth'},
+        enlarge y limits = .3,
+        label style={font=\bfseries},
+        title style={font=\bfseries},
+        mark size=1.5,
+        mark repeat=4,
+    ]
+
+    \addplot
+    table[x index = {0}, y index = {1}]\data;
+
+    \addplot
+    table[x index = {0}, y index = {\INDEXONE}]\data;
+
+    \addplot+[mark phase = 2]
+    table[x index = {0}, y index = {\INDEXTWO}]\data;
+
+    \legend{
+        {$m_{1}(1 \vert u_{1}, 0) = m_{1}(1 \vert u_{1}, 1)$},
+        {$m_{2}(1 \vert u_{2}, 0)$},
+        {$m_{2}(1 \vert u_{2}, 1)$},
+    }
+
+    \end{axis}
+\end{tikzpicture}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

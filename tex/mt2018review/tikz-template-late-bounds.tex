@@ -1,0 +1,106 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{plotmarks}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{pdflscape}
+\usepackage{fullpage}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+
+\thispagestyle{empty} % No page number so you can crop correctly
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MUSTACHE VARIABLES
+%
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
+% topticks: vector of dictionaries with the following keys
+%   xpos -- x-coordinate of relevant object
+%   ypos -- y-coordinate of relevant object
+%   xlabel -- label on top x-axis
+%   nodelabel -- label for tikz nodes
+%   xlabelpos -- x-coordinate of label
+%   ylabelpos -- y-coordinate of label
+%   label -- label text
+%   bendopts -- bend options for arrow
+%
+% curves: vector of tp-specific dictionaries containing:
+%   segments -- vector of dictionaries containing:
+%     opts, e.g., forget plot
+%     coordinates
+%   legendtitle
+%
+% xpos -- comma-separated string of `xpos` values
+% xlabel -- comma-separated string of `xlabel` values
+% cycleshift -- number that shifts the aesthetics
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\begin{landscape}
+\begin{center}
+
+\begin{tikzpicture}
+
+\begin{axis}[
+    width=6in,
+    height=4in,
+    major tick length=.075cm,
+    xlabel={Degree of Extrapolation ($\alpha$)},
+    ylabel={Parameter Value},
+    legend cell align=left,
+    legend style = {at={(1,0)}, anchor = south east},
+    mark repeat = {1},
+    enlarge x limits = 0,
+    xticklabel style = {/pgf/number format/fixed},
+    %cycle list name=black white,
+    cycle list name=exotic,
+    tick pos = left,
+    extra x ticks={<<:xpos>>},
+    extra x tick labels={<<:xlabel>>},
+    extra x tick style={
+        tick pos=right,
+        ticklabel pos=right,
+    }
+]
+
+\pgfplotsset{cycle list shift=<<:cycleshift>>}
+
+<<#:curves>>
+<<#segments>>
+    \addplot+[<<opts>>]
+    coordinates{
+        <<coordinates>>
+    };
+<</segments>>
+\addlegendentry{<<legendtitle>>}
+
+<</:curves>>
+
+<<#:topticks>>
+\node[anchor = west]
+(<<nodelabel>>label) at (<<xlabelpos>>,<<ylabelpos>>){<<label>>};
+\node (<<nodelabel>>) at (axis cs:<<xpos>>,<<ypos>>){};
+\draw[->, thick] (<<nodelabel>>label) to <<bendopts>> (<<nodelabel>>);
+\draw[dotted, thin]
+    ({axis cs:<<xpos>>,0} |- {rel axis cs:0,0})
+--  ({axis cs:<<xpos>>,0} |- {rel axis cs:0,1});
+
+<</:topticks>>
+
+\end{axis}
+
+\end{tikzpicture}
+
+\end{center}
+\end{landscape}
+\end{document}

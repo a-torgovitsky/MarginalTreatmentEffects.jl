@@ -1,0 +1,85 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{plotmarks}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{pdflscape}
+\usepackage{fullpage}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+
+\thispagestyle{empty} % No page number so you can crop correctly
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MUSTACHE VARIABLES
+%
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
+% pscore
+% pscorelabel
+%
+% weights
+%   Note: this is a vector of dictionaries.
+%     Each dictionary corresponds to a particular target parameter and contains
+%     the following keys:
+%       legendtitle -- label for the legend
+%       segments -- a vector of segment-specific dictionaries with the keys:
+%         coordinates -- string of (x, y) pairs
+%         opts -- options for the plot
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\begin{landscape}
+\begin{center}
+
+\begin{tikzpicture}
+
+\begin{axis}[
+    width=6in,
+    height=4in,
+    ymin=0,
+    ymax=6,
+    xmin=0,
+    xmax=1,
+    major tick length=.075cm,
+    xlabel={Unobserved Heterogeneity in Treatment Choice ($u$)},
+    ylabel={Average $d = 1$ Weights ($\mathbb{E}[\omega_{1}^{\star}(u,X,Z)]$)},
+    legend cell align=left,
+    mark repeat = {10},
+    cycle list name=exotic,
+    tick pos = left,
+    extra x ticks={<<:pscore>>},
+    extra x tick labels={<<:pscorelabel>>},
+    extra x tick style={
+        tick pos=right,
+        ticklabel pos=right,
+    }
+]
+
+<<#:weights>>
+<<#segments>>
+    \addplot+[<<opts>>]
+    coordinates{
+        <<coordinates>>
+    };
+<</segments>>
+\addlegendentry{<<legendtitle>>}
+<</:weights>>
+
+\end{axis}
+
+\end{tikzpicture}
+
+\end{center}
+\end{landscape}
+\end{document}

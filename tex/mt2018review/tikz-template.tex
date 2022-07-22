@@ -1,0 +1,333 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{pgfplotstable}
+\usetikzlibrary{plotmarks}
+\usetikzlibrary{calc}
+\usepgfplotslibrary{fillbetween}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{ifthen}
+\usepackage{pdflscape}
+\usepackage{fullpage}
+\usepgflibrary{patterns}
+\usetikzlibrary{patterns}
+\DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+\DeclareMathOperator{\Exp}{\mathbb{E}}
+
+\thispagestyle{empty} % No page number so you can crop correctly
+\pgfplotsset{set layers} % This is important --- shading won't work without it!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 05/20/16
+% This allows you to put different line styles for different axes
+% See
+% http://tex.stackexchange.com/a/96910/1931
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pgfplotsset{
+    every first x axis line/.style={},
+    every first y axis line/.style={},
+    every first z axis line/.style={},
+    every second x axis line/.style={},
+    every second y axis line/.style={},
+    every second z axis line/.style={},
+    first x axis line style/.style={/pgfplots/every first x axis line/.append style={#1}},
+    first y axis line style/.style={/pgfplots/every first y axis line/.append style={#1}},
+    first z axis line style/.style={/pgfplots/every first z axis line/.append style={#1}},
+    second x axis line style/.style={/pgfplots/every second x axis line/.append style={#1}},
+    second y axis line style/.style={/pgfplots/every second y axis line/.append style={#1}},
+    second z axis line style/.style={/pgfplots/every second z axis line/.append style={#1}}
+}
+
+\makeatletter
+\def\pgfplots@drawaxis@outerlines@separate@onorientedsurf#1#2{%
+    \if2\csname pgfplots@#1axislinesnum\endcsname
+        % centered axis lines handled elsewhere.
+    \else
+    \scope[/pgfplots/every outer #1 axis line,
+        #1discont,decoration={pre length=\csname #1disstart\endcsname, post length=\csname #1disend\endcsname}]
+        \pgfplots@ifaxisline@B@onorientedsurf@should@be@drawn{0}{%
+            \draw [/pgfplots/every first #1 axis line] decorate {
+                \pgfextra
+                % exchange roles of A <-> B axes:
+                \pgfplotspointonorientedsurfaceabsetupfor{#2}{#1}{\pgfplotspointonorientedsurfaceN}%
+                \pgfplots@drawgridlines@onorientedsurf@fromto{\csname pgfplots@#2min\endcsname}%
+                \endpgfextra
+                };
+        }{}%
+        \pgfplots@ifaxisline@B@onorientedsurf@should@be@drawn{1}{%
+            \draw [/pgfplots/every second #1 axis line] decorate {
+                \pgfextra
+                % exchange roles of A <-> B axes:
+                \pgfplotspointonorientedsurfaceabsetupfor{#2}{#1}{\pgfplotspointonorientedsurfaceN}%
+                \pgfplots@drawgridlines@onorientedsurf@fromto{\csname pgfplots@#2max\endcsname}%
+                \endpgfextra
+                };
+        }{}%
+    \endscope
+    \fi
+}%
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MUSTACHE VARIABLES
+%
+% The variables above are used below as placeholders.
+% They are fenced by "<<" and ">>" instead of the typical "{{" and "}}" because
+% braces carry meaning in LaTeX.
+% These variables are also the keys in a dictionary and the values in this
+% dictionary will replace the corresponding placeholders in this template.
+%
+% title
+% titlesuffix
+% titlevspace
+% fontsize
+% axiswidth
+% axisheight
+% xmin
+% xmax
+% markrepeat
+% markphase
+% mtrymin
+% mtrymax
+% xlabel
+% weightymin
+% weightymax
+% ylabelweights
+% ylabelbuffer
+% ylabeltextwidth
+% legendcols
+% mtrlegendtext
+% mtrylabel
+%
+% m0segments
+% m1segments
+%   Notes:
+%     The MTR functions are split up into segments based on where
+%     discontinuities arise.
+%     Each segment will have its own dictionary with the following keys:
+%       pathname
+%       coordinates
+%
+% d0weights
+% d1weights
+%   Notes:
+%     The weights are piecewise-constant functions of u.
+%     Each piece will have its own dictionary with the following keys:
+%       pathname
+%       color
+%       mark -- this isn't used in MT (2018)
+%       marksize -- this isn't used in MT (2018)
+%       coordinates
+%       linetype -- this isn't used in MST (2018)
+%     These dictionaries will be collected in two vectors,
+%     one for d = 0 and another for d = 1.
+%
+% legend
+%   Notes:
+%     This variable is a vector of dictionaries.
+%     Each dictionary contains the information of single entry in the legend:
+%       color
+%       mark
+%       marksize
+%       legendtitle
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\begin{landscape}
+\begin{center}
+
+\large{<<:title>>}
+\\
+~
+\\[<<:titlevspace>>]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% AXIS 1 for D = 0
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{tikzpicture}[font=<<:fontsize>>]
+
+%%%%% M0
+\begin{axis}[%
+    width=<<:axiswidth>>,
+    height=<<:axisheight>>,
+    scale only axis,
+    xmin=<<:xmin>>,
+    xmax=<<:xmax>>,
+    ymin=<<:mtrymin>>,
+    ymax=<<:mtrymax>>,
+    axis x line=none,
+    hide y axis
+]
+\addplot[name path=zero, draw=none, forget plot] {0};
+
+<<#:m0segments>>
+\addplot[
+    name path=<<pathname>>,
+    color=black,
+    on layer={axis foreground},
+    solid,
+    line width = <<~:linewidthmtr>>
+]
+coordinates{
+    <<coordinates>>
+};
+\label{path-<<pathname>>}
+<</:m0segments>>
+
+\end{axis}
+
+%%% WEIGHTS
+\begin{axis}[
+    width=<<:axiswidth>>,
+    height=<<:axisheight>>,
+    scale only axis,
+    xmin=<<:xmin>>,
+    xmax=<<:xmax>>,
+    title={$d = 0$},
+    xlabel={<<:xlabel>>},
+    ymin=<<:weightymin>>,
+    ymax=<<:weightymax>>,
+    ylabel={<<:ylabelweights>>},
+    y label style={at={(ticklabel* cs:<<:ylabelbuffer>>)},
+                   font=\small,
+                   anchor=west,
+                   align=center,
+                   text width=<<:ylabeltextwidth>>,
+                   rotate=-90},
+    axis x line*=bottom,
+    axis y line*=left,
+    separate axis lines,
+    legend columns=<<:legendcols>>,
+    legend to name=legendsave,
+    legend style={
+        legend cell align=left,
+        align=left,
+        text opacity=1
+    },
+    every axis legend/.append style={nodes={right}}
+]
+% inherit properties associated with the `path-mtr01` path name, which is the
+% path of the first segment of MTR for d = 0
+\addlegendimage{/pgfplots/refstyle=path-mtr01}
+\addlegendentry{<<:mtrlegendtext>>}
+
+<<#:d0weights>>
+\addplot[
+    name path=<<pathname>>,
+    forget plot,
+    color=<<color>>,
+    % mark=<<mark>>,
+    % mark size=<<marksize>>,
+    % mark repeat=<<~:markrepeat>>,
+    % mark phase=<<~:markphase>>,
+    <<linetype>>,
+    line width=<<~:linewidth>>
+]
+coordinates{
+ <<coordinates>>
+};
+\label{path-<<pathname>>}
+<</:d0weights>>
+
+<<#:legend>>
+\addlegendimage{
+    <<linetype>>,
+    color=<<color>>,
+    % mark=<<mark>>,
+    line width=<<~:linewidth>>,
+    % mark size=<<marksize>>
+}
+\addlegendentry{<<legendtitle>>}
+<</:legend>>
+
+\end{axis}
+
+\end{tikzpicture}
+\qquad
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% AXIS 2 FOR D = 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{tikzpicture}[font=<<:fontsize>>]
+%%%%% M1
+\begin{axis}[%
+    width=<<:axiswidth>>,
+    height=<<:axisheight>>,
+    scale only axis,
+    xmin=<<:xmin>>,
+    xmax=<<:xmax>>,
+    ymin=<<:mtrymin>>,
+    ymax=<<:mtrymax>>,
+    axis x line=none,
+    axis y line*=right,
+    ytick={0, .25, 0.5, .75,  1},
+    ylabel={<<:mtrylabel>>},
+    y label style={
+        at={(ticklabel* cs:<<:ylabelbuffer>>)},
+        anchor=east,
+        font=\small,
+        rotate=-90
+    }
+]
+\addplot[name path=zero, draw=none, forget plot] {0};
+
+<<#:m1segments>>
+\addplot[
+    name path=<<pathname>>,
+    color=black,
+    on layer={axis foreground},
+    solid,
+    line width = <<~:linewidthmtr>>
+]
+coordinates{
+    <<coordinates>>
+};
+\label{path-<<pathname>>}
+<</:m1segments>>
+
+\end{axis}
+%%% WEIGHTS
+\begin{axis}[
+    width=<<:axiswidth>>,
+    height=<<:axisheight>>,
+    scale only axis,
+    xmin=<<:xmin>>,
+    xmax=<<:xmax>>,
+    title={$d = 1$},
+    xlabel={<<:xlabel>>},
+    ymin=<<:weightymin>>,
+    ymax=<<:weightymax>>,
+    hide y axis,
+    axis x line*=bottom,
+]
+
+<<#:d1weights>>
+\addplot[
+    name path=<<pathname>>,
+    forget plot,
+    color=<<color>>,
+    % mark=<<mark>>,
+    % mark size=<<marksize>>,
+    % mark repeat=<<~:markrepeat>>,
+    % mark phase=<<~:markphase>>,
+    <<linetype>>,
+    line width=<<~:linewidth>>
+]
+coordinates{
+ <<coordinates>>
+};
+\label{path-<<pathname>>}
+<</:d1weights>>
+
+\end{axis}
+
+\end{tikzpicture}
+\\
+\ref{legendsave}
+
+\end{center}
+\end{landscape}
+\end{document}
