@@ -53,7 +53,6 @@ function olsslope(dgp::DGP)
     IVLike(name, s, nothing)
 end
 
-# TODO: I'm not a fan of the name. Replace `indicator` with `nonparametric`?
 # support is a vector values in dgp.suppZ
 function ivslope_indicator(dgp::DGP; support::Vector)
     @assert size(dgp.suppZ, 2) == 1 # haven't coded other cases

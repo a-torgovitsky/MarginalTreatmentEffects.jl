@@ -64,7 +64,6 @@ function make_dir(pathstr::String; copysource::Bool = false)
             source = joinpath(sourcepathstr, c)
             destination = joinpath(pathstr, c)
             if ispath(destination)
-                # TODO: output is distracting, especially when project_choice == 0
                 @info "Source code already exists, so not copying."
                 break
             else
@@ -80,7 +79,6 @@ function make_dir(pathstr::String; copysource::Bool = false)
         source = joinpath(texdir, c)
         destination = joinpath(projectdir, c)
         if ispath(destination)
-            # TODO: output is distracting, especially when project_choice == 0
             @info destination * " already exists, so not copying tex files."
             break
         else

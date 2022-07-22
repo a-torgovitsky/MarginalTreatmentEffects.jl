@@ -1,5 +1,3 @@
-# TODO(omkarakatta): consider getting rid of `isnothing(steps)` conditional?
-
 """
     df_to_coordinates(df::DataFrame,
                       xindex,

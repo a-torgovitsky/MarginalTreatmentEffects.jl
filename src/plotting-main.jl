@@ -252,7 +252,7 @@ function mtrs_and_weights(savedir::String,
     end
     if haskey(assumptions, :saturated) && assumptions[:saturated]
         s_ivlike = make_slist(dgp.suppZ)
-        # TODO(omkarakatta): is this generalizable to other DGPs?
+        # NOTE: this may not be generalizable to other DGPs.
         legend_order = [1, 3, 5, 2, 4, 6] # ensures correct legend aesthetics
         for saturated_idx in 1:length(s_ivlike.s)
             s = IVLike(
