@@ -46,7 +46,7 @@ end
 
 # DGP MTRs and MTE (Figure 1)
 function run_tikz_mtr(savedir::String)
-    return mtr_mte(savedir, "tikz-mtr")
+    return mtr_mte(savedir, "figure1")
 end
 
 # Weights for Conventional Target Parameters (Figure 2)
