@@ -24,7 +24,7 @@ using MarginalTreatmentEffects
 menu("/path/to/where/you/want/to/save")
 ```
 
-If you want to try to automatically call `latexpdf` to compile the TikZ figures, do this:
+If you want to try to automatically call `pdflatex` to compile the TikZ figures, do this:
 ```julia
 menu("/path/to/where/you/want/to/save", compile = true)
 ```
